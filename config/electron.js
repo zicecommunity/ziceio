@@ -70,7 +70,7 @@ const createWindow = () => {
     },
   });
 
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   
   getZcePrice().then(({ USD }) => store.set('ZCE_DOLLAR_PRICE', String(USD)));
 

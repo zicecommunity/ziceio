@@ -1,22 +1,22 @@
 {
-  "name": "zepio",
-  "productName": "Zepio",
-  "version": "0.7.4",
-  "description": "Zepio | Cross-platform sapling-enabled full-node ZiCE wallet",
+  "name": "ziceio",
+  "productName": "ZiCEio",
+  "version": "0.7.4-1",
+  "description": "ZiCEio | Cross-platform sapling-enabled full-node ZiCE wallet",
   "main": "config/main.js",
-  "homepage": "https://zepiowallet.com",
+  "homepage": "https://zicecoin.org",
   "license": "MIT",
   "author": {
-    "name": "André Neves",
-    "email": "andrerfneves@protonmail.com",
-    "url": "https://andrenev.es"
+    "name": "Iain Lawrie",
+    "email": "dev@zicecoin.org",
+    "url": "http://zicecoin.org"
   },
   "bugs": {
-    "url": "https://github.com/ZiCEFoundation/zepio/issues"
+    "url": "https://github.com/zicecommunity/ziceio/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZiCEFoundation/zepio"
+    "url": "git+https://github.com/zicecommunity/ziceio"
   },
   "scripts": {
     "start": "yarn check --integrity && concurrently \"cross-env BROWSER=none yarn dev\" \"wait-on http://0.0.0.0:8080 && yarn electron:dev\"",
