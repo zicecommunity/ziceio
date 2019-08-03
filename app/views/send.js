@@ -27,7 +27,7 @@ import { ascii2hex } from '../utils/ascii-to-hexadecimal';
 import { isHex } from '../utils/is-hex';
 import { getCoinName } from '../utils/get-coin-name';
 import { openExternal } from '../utils/open-external';
-import { ZCASH_EXPLORER_BASE_URL } from '../constants/explorer';
+import { ZICE_EXPLORER_BASE_URL } from '../constants/explorer';
 
 import SentIcon from '../assets/images/transaction_sent_icon_dark.svg';
 import MenuIconDark from '../assets/images/menu_icon_dark.svg';
@@ -72,7 +72,16 @@ type AmountProps =
       isEmpty: boolean,
     }
   | Object;
-const AmountWrapper = styled.div`
+
+  const OuterWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: center;
+`;
+
+  const AmountWrapper = styled.div`
   width: 100%;
   position: relative;
 
@@ -194,7 +203,7 @@ const ValidateItemLabel = styled(ItemLabel)`
   margin-bottom: -1px;
 `;
 
-const SendZECValue = styled(TextComponent)`
+const SendZCEValue = styled(TextComponent)`
   color: ${props => props.theme.colors.transactionSent};
   font-size: ${props => `${props.theme.fontSize.large}em`};
   font-weight: ${props => String(props.theme.fontWeight.bold)};
@@ -438,12 +447,12 @@ class Component extends PureComponent<Props, State> {
 
   componentDidMount() {
     const {
-      resetSendView, loadAddresses, loadZECPrice, match,
+      resetSendView, loadAddresses, loadZCEPrice, match,
     } = this.props;
 
     resetSendView();
     loadAddresses();
-    loadZECPrice();
+    loadZCEPrice();
 
     if (match.params.to) {
       this.handleChange('to')(match.params.to);
@@ -641,7 +650,7 @@ class Component extends PureComponent<Props, State> {
           <ZSuccessLabel value='Success!' />
           <ZSuccessContentWrapper>
             <ZSuccessMessage value='Your transaction was sent successfully.' />
-            <ZSuccessTransactionId value={`Transaction ID: ${operationId}`} onClick={() => openExternal(ZCASH_EXPLORER_BASE_URL + operationId)} />
+            <ZSuccessTransactionId value={`Transaction ID: ${operationId}`} onClick={() => openExternal(ZICE_EXPLORER_BASE_URL + operationId)} />
           </ZSuccessContentWrapper>
           <FormButton
             label='Done'
@@ -677,7 +686,7 @@ class Component extends PureComponent<Props, State> {
         <ConfirmItemWrapper alignItems='center'>
           <ColumnComponent>
             <ItemLabel value='AMOUNT' />
-            <SendZECValue value={`-${valueSent}`} />
+            <SendZCEValue value={`-${valueSent}`} />
             <SendUSDValue value={`-${valueSentInUsd}`} />
           </ColumnComponent>
           <ColumnComponent>
@@ -725,6 +734,7 @@ class Component extends PureComponent<Props, State> {
       || new BigNumber(amount).gt(balance)
       || !this.isMemoContentValid()
       || nodeSyncType !== NODE_SYNC_TYPES.READY
+      || to === from
     );
   };
 
@@ -746,7 +756,7 @@ class Component extends PureComponent<Props, State> {
     const {
       addresses,
       balance,
-      zecPrice,
+      zcePrice,
       isSending,
       error,
       operationId,
@@ -775,9 +785,9 @@ class Component extends PureComponent<Props, State> {
     const fixedAmount = isEmpty || new BigNumber(amount).eq(0) ? 0 : this.getAmountWithFee();
     const coinName = getCoinName();
 
-    const zecBalance = formatNumber({ value: balance, append: `${coinName} ` });
-    const zecBalanceInUsd = formatNumber({
-      value: new BigNumber(balance).times(zecPrice).toNumber(),
+    const zceBalance = formatNumber({ value: balance, append: `${coinName} ` });
+    const zceBalanceInUsd = formatNumber({
+      value: new BigNumber(balance).times(zcePrice).toNumber(),
       append: 'USD $',
     });
     const valueSent = formatNumber({
@@ -785,7 +795,7 @@ class Component extends PureComponent<Props, State> {
       append: `${coinName} `,
     });
     const valueSentInUsd = formatNumber({
-      value: new BigNumber(fixedAmount).times(zecPrice).toNumber(),
+      value: new BigNumber(fixedAmount).times(zcePrice).toNumber(),
       append: 'USD $',
     });
 
@@ -797,205 +807,207 @@ class Component extends PureComponent<Props, State> {
     const isValidMemo = this.isMemoContentValid();
 
     return (
-      <RowComponent id='send-wrapper' justifyContent='space-between'>
-        <FormWrapper>
-          <Label value='From an address' />
-          <SelectComponent
-            onChange={this.handleChange('from')}
-            value={from}
-            placeholder='Select a address'
-            options={addresses.map(({ address, balance: addressBalance }) => ({
-              label: `[ ${formatNumber({
-                append: `${coinName} `,
-                value: addressBalance,
-              })} ]  ${address}`,
-              value: address,
-            }))}
-            capitalize={false}
-          />
-          <Label value='Amount' />
-          <AmountWrapper isEmpty={isEmpty}>
-            <AmountInput
-              renderRight={() => (
-                <MaxAvailableAmount
-                  onClick={() => this.handleChange('amount')(this.getMaxAmountWithoutFee())}
-                  disabled={!from}
-                >
-                  <MaxAvailableAmountImg src={arrowUpIcon} />
-                </MaxAvailableAmount>
-              )}
-              isEmpty={isEmpty}
-              type='number'
-              onChange={this.handleChange('amount')}
-              value={String(amount)}
-              placeholder={`${coinName} 0.0`}
-              min={0.01}
-              name='amount'
+      <OuterWrapper id='outer-wrapper'>
+        <RowComponent justifyContent='space-between' style={{width: 100 + '%'}}>
+          <FormWrapper>
+            <Label value='From an address' />
+            <SelectComponent
+              onChange={this.handleChange('from')}
+              value={from}
+              placeholder='Select an address'
+              options={addresses.map(({ address, balance: addressBalance }) => ({
+                label: `[ ${formatNumber({
+                  append: `${coinName} `,
+                  value: addressBalance,
+                })} ]  ${address}`,
+                value: address,
+              }))}
+              capitalize={false}
             />
-          </AmountWrapper>
-          <Label value='To' />
-          <InputComponent
-            onChange={this.handleChange('to')}
-            value={to}
-            placeholder='Enter Address'
-            renderRight={to ? this.renderValidationStatus : () => null}
-            name='to'
-          />
-          {shouldShowMemoField && (
-            <>
-              <Label value='Memo' />
-              <InputComponent
-                onChange={this.handleChange('memo')}
-                value={memo}
-                inputType='textarea'
-                placeholder='Enter a text here'
-                name='memo'
+            <Label value='Amount' />
+            <AmountWrapper isEmpty={isEmpty}>
+              <AmountInput
+                renderRight={() => (
+                  <MaxAvailableAmount
+                    onClick={() => this.handleChange('amount')(this.getMaxAmountWithoutFee())}
+                    disabled={!from}
+                  >
+                    <MaxAvailableAmountImg src={arrowUpIcon} />
+                  </MaxAvailableAmount>
+                )}
+                isEmpty={isEmpty}
+                type='number'
+                onChange={this.handleChange('amount')}
+                value={String(amount)}
+                placeholder={`${coinName} 0.0`}
+                min={0.01}
+                name='amount'
               />
-            </>
-          )}
-          {!isValidMemo && <MemoValidationText value='Please enter a valid hexadecimal memo' />}
-          <ActionsWrapper>
-            <ShowFeeButton
-              id='send-show-additional-options-button'
-              onClick={() => this.setState(state => ({
-                showFee: !state.showFee,
-              }))
-              }
-            >
-              <SeeMoreIcon src={seeMoreIcon} alt='Show more icon' />
-              <TextComponent value={`${showFee ? 'Hide' : 'Show'} Additional Options`} />
-            </ShowFeeButton>
+            </AmountWrapper>
+            <Label value='To' />
+            <InputComponent
+              onChange={this.handleChange('to')}
+              value={to}
+              placeholder='Enter Address'
+              renderRight={to ? this.renderValidationStatus : () => null}
+              name='to'
+            />
             {shouldShowMemoField && (
-              <HexadecimalWrapper>
-                <Checkbox
-                  onChange={event => this.setState({ isHexMemo: event.target.checked })}
-                  checked={isHexMemo}
+              <>
+                <Label value='Memo' />
+                <InputComponent
+                  onChange={this.handleChange('memo')}
+                  value={memo}
+                  inputType='textarea'
+                  placeholder='Enter a text here'
+                  name='memo'
                 />
-                <HexadecimalText
-                  onClick={() => this.setState(prevState => ({ isHexMemo: !prevState.isHexMemo }))}
-                  value='Hexadecimal Memo'
-                />
-              </HexadecimalWrapper>
+              </>
             )}
-          </ActionsWrapper>
-          <RevealsMain>
-            <Transition
-              native
-              items={showFee}
-              enter={[
-                {
-                  height: 'auto',
-                  opacity: 1,
-                  overflow: 'visible',
-                },
-              ]}
-              leave={{ height: 0, opacity: 0 }}
-              from={{
-                position: 'absolute',
-                overflow: 'hidden',
-                opacity: 0,
-                height: 0,
-              }}
+            {!isValidMemo && <MemoValidationText value='Please enter a valid hexadecimal memo' />}
+            <ActionsWrapper>
+              <ShowFeeButton
+                id='send-show-additional-options-button'
+                onClick={() => this.setState(state => ({
+                  showFee: !state.showFee,
+                }))
+                }
+              >
+                <SeeMoreIcon src={seeMoreIcon} alt='Show more icon' />
+                <TextComponent value={`${showFee ? 'Hide' : 'Show'} Additional Options`} />
+              </ShowFeeButton>
+              {/* {shouldShowMemoField && (
+                <HexadecimalWrapper>
+                  <Checkbox
+                    onChange={event => this.setState({ isHexMemo: event.target.checked })}
+                    checked={isHexMemo}
+                  />
+                  <HexadecimalText
+                    onClick={() => this.setState(prevState => ({ isHexMemo: !prevState.isHexMemo }))}
+                    value='Hexadecimal Memo'
+                  />
+                </HexadecimalWrapper>
+              )} */}
+            </ActionsWrapper>
+            <RevealsMain>
+              <Transition
+                native
+                items={showFee}
+                enter={[
+                  {
+                    height: 'auto',
+                    opacity: 1,
+                    overflow: 'visible',
+                  },
+                ]}
+                leave={{ height: 0, opacity: 0 }}
+                from={{
+                  position: 'absolute',
+                  overflow: 'hidden',
+                  opacity: 0,
+                  height: 0,
+                }}
+              >
+                {(show: boolean) => show
+                  && ((props: Object) => (
+                    <animated.div style={props}>
+                      <FeeWrapper id='send-fee-wrapper'>
+                        <RowComponent alignItems='flex-end' justifyContent='space-between'>
+                          <ColumnComponent width='64%'>
+                            <Label value={`Fee (${getCoinName()})`} />
+                            <InputComponent
+                              type='number'
+                              onChange={this.handleChange('fee')}
+                              value={String(fee)}
+                              disabled={feeType !== FEES.CUSTOM}
+                              bgColor={theme.colors.sendAdditionalInputBg(this.props)}
+                              color={theme.colors.sendAdditionalInputText(this.props)}
+                              name='fee'
+                            />
+                          </ColumnComponent>
+                          <ColumnComponent width='35%'>
+                            <SelectComponent
+                              placement='top'
+                              value={String(feeType)}
+                              bgColor={theme.colors.sendAdditionalInputBg(this.props)}
+                              onChange={this.handleChangeFeeType}
+                              options={Object.keys(FEES).map(cur => ({
+                                label: cur.toLowerCase(),
+                                value: String(FEES[cur]),
+                              }))}
+                            />
+                          </ColumnComponent>
+                        </RowComponent>
+                        <RowComponent>
+                          {feeType === FEES.CUSTOM && (
+                            <CustomFeeWarning value='Custom fees may compromise your privacy since fees are transparent.' />
+                          )}
+                        </RowComponent>
+                      </FeeWrapper>
+                    </animated.div>
+                  ))
+                }
+              </Transition>
+            </RevealsMain>
+          </FormWrapper>
+          <SendWrapper>
+            <InfoCard>
+              <InfoContent>
+                <InfoCardLabel value='Available Funds' />
+                <TextComponent value={zceBalance} size={1.25} isBold />
+                <InfoCardUSD value={zceBalanceInUsd} size={0.84375} />
+              </InfoContent>
+              <Divider opacity={0.3} />
+              <InfoContent>
+                <InfoCardLabel value='Sending' />
+                <InfoCardSubLabel value='Includes transaction fees' />
+                <TextComponent value={valueSent} size={1.25} isBold />
+                <InfoCardUSD value={valueSentInUsd} size={0.84375} />
+              </InfoContent>
+            </InfoCard>
+            <ConfirmDialogComponent
+              title='Transaction Status'
+              onConfirm={this.handleSubmit}
+              showButtons={!isSending && !error && !operationId}
+              onClose={this.reset}
+              renderTrigger={toggle => (
+                <SendButtonWrapper>
+                  {nodeSyncType !== NODE_SYNC_TYPES.READY && (
+                    <SimpleTooltip>
+                      <TooltipText value='Cannot send until data is synced.' />
+                    </SimpleTooltip>
+                  )}
+                  {!showBalanceTooltip ? null : (
+                    <SimpleTooltip>
+                      <TooltipText value='Not enough funds!' />
+                    </SimpleTooltip>
+                  )}
+                  <FormButton
+                    onClick={() => this.showModal(toggle)}
+                    id='send-submit-button'
+                    label='Send'
+                    variant='primary'
+                    focused
+                    isFluid
+                    disabled={this.shouldDisableSendButton()}
+                  />
+                </SendButtonWrapper>
+              )}
             >
-              {(show: boolean) => show
-                && ((props: Object) => (
-                  <animated.div style={props}>
-                    <FeeWrapper id='send-fee-wrapper'>
-                      <RowComponent alignItems='flex-end' justifyContent='space-between'>
-                        <ColumnComponent width='64%'>
-                          <Label value={`Fee (${getCoinName()})`} />
-                          <InputComponent
-                            type='number'
-                            onChange={this.handleChange('fee')}
-                            value={String(fee)}
-                            disabled={feeType !== FEES.CUSTOM}
-                            bgColor={theme.colors.sendAdditionalInputBg(this.props)}
-                            color={theme.colors.sendAdditionalInputText(this.props)}
-                            name='fee'
-                          />
-                        </ColumnComponent>
-                        <ColumnComponent width='35%'>
-                          <SelectComponent
-                            placement='top'
-                            value={String(feeType)}
-                            bgColor={theme.colors.sendAdditionalInputBg(this.props)}
-                            onChange={this.handleChangeFeeType}
-                            options={Object.keys(FEES).map(cur => ({
-                              label: cur.toLowerCase(),
-                              value: String(FEES[cur]),
-                            }))}
-                          />
-                        </ColumnComponent>
-                      </RowComponent>
-                      <RowComponent>
-                        {feeType === FEES.CUSTOM && (
-                          <CustomFeeWarning value='Custom fees may compromise your privacy since fees are transparent.' />
-                        )}
-                      </RowComponent>
-                    </FeeWrapper>
-                  </animated.div>
-                ))
-              }
-            </Transition>
-          </RevealsMain>
-        </FormWrapper>
-        <SendWrapper>
-          <InfoCard>
-            <InfoContent>
-              <InfoCardLabel value='Available Funds' />
-              <TextComponent value={zecBalance} size={1.25} isBold />
-              <InfoCardUSD value={zecBalanceInUsd} size={0.84375} />
-            </InfoContent>
-            <Divider opacity={0.3} />
-            <InfoContent>
-              <InfoCardLabel value='Sending' />
-              <InfoCardSubLabel value='Includes transaction fees' />
-              <TextComponent value={valueSent} size={1.25} isBold />
-              <InfoCardUSD value={valueSentInUsd} size={0.84375} />
-            </InfoContent>
-          </InfoCard>
-          <ConfirmDialogComponent
-            title='Transaction Status'
-            onConfirm={this.handleSubmit}
-            showButtons={!isSending && !error && !operationId}
-            onClose={this.reset}
-            renderTrigger={toggle => (
-              <SendButtonWrapper>
-                {nodeSyncType !== NODE_SYNC_TYPES.READY && (
-                  <SimpleTooltip>
-                    <TooltipText value='Cannot send until data is synced.' />
-                  </SimpleTooltip>
-                )}
-                {!showBalanceTooltip ? null : (
-                  <SimpleTooltip>
-                    <TooltipText value='Not enough funds!' />
-                  </SimpleTooltip>
-                )}
-                <FormButton
-                  onClick={() => this.showModal(toggle)}
-                  id='send-submit-button'
-                  label='Send'
-                  variant='primary'
-                  focused
-                  isFluid
-                  disabled={this.shouldDisableSendButton()}
-                />
-              </SendButtonWrapper>
-            )}
-          >
-            {toggle => (
-              <ModalContent id='send-confirm-transaction-modal' width='100%'>
-                {this.renderModalContent({
-                  valueSent,
-                  valueSentInUsd,
-                  toggle,
-                })}
-              </ModalContent>
-            )}
-          </ConfirmDialogComponent>
-          <FormButton label='Clear Form' variant='secondary' onClick={this.reset} />
-        </SendWrapper>
+              {toggle => (
+                <ModalContent id='send-confirm-transaction-modal' width='100%'>
+                  {this.renderModalContent({
+                    valueSent,
+                    valueSentInUsd,
+                    toggle,
+                  })}
+                </ModalContent>
+              )}
+            </ConfirmDialogComponent>
+            <FormButton label='Clear Form' variant='secondary' onClick={this.reset} />
+          </SendWrapper>
       </RowComponent>
+      </OuterWrapper>
     );
   }
 }

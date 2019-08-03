@@ -28,15 +28,18 @@ import {
 } from '../constants/routes';
 
 const FullWrapper = styled.div`
+  font-family: Exo-Medium;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100%;
 `;
 
 const ContentWrapper = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100vw;
+  align-items: center;
+  min-width: 0;
 `;
 
 const getTitle = (path: string) => {
@@ -53,9 +56,9 @@ export const RouterComponent = ({
   history: RouterHistory,
 }) => (
   <FullWrapper>
-    <HeaderComponent title={getTitle(location.pathname)} />
+    <SidebarContainer location={location} history={history} />
     <ContentWrapper>
-      <SidebarContainer location={location} history={history} />
+      <HeaderComponent title={getTitle(location.pathname)} />
       <LayoutComponent>
         <ScrollTopComponent>
           <Switch>

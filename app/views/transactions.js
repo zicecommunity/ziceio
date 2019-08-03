@@ -44,17 +44,30 @@ const ListWrapper = styled.div`
   margin-top: 10px;
 `;
 
+const UPDATE_INTERVAL = 10000;
+
 export class TransactionsView extends PureComponent<Props> {
   componentDidMount() {
     const { getTransactions, resetTransactionsList } = this.props;
 
-    resetTransactionsList();
+   resetTransactionsList();
+
     getTransactions({
       count: PAGE_SIZE,
       offset: 0,
       shieldedTransactionsCount: 0,
     });
+  
+    this.interval = setInterval(() => getTransactions({
+      count: PAGE_SIZE,
+      offset: 0,
+      shieldedTransactionsCount: 0,
+    }), UPDATE_INTERVAL);
   }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+}
 
   isRowLoaded = ({ index }: { index: number }) => {
     const { hasNextPage, transactions } = this.props;
@@ -96,7 +109,7 @@ export class TransactionsView extends PureComponent<Props> {
   };
 
   renderTransactions = ({ index }: { index: number }) => {
-    const { transactions, zecPrice } = this.props;
+    const { transactions, zcePrice } = this.props;
 
     const transaction = transactions[index];
     const previousTransaction = transactions[index - 1];
@@ -110,12 +123,15 @@ export class TransactionsView extends PureComponent<Props> {
         <TransactionItemComponent
           confirmed={transaction.confirmed}
           confirmations={transaction.confirmations}
-          address={transaction.address}
+          toaddress={transaction.toaddress}
+          fromaddress={transaction.fromaddress}
           amount={transaction.amount}
           date={transaction.date}
+          isRead={transaction.isRead}
           transactionId={transaction.transactionId}
           type={transaction.type}
-          zecPrice={zecPrice}
+          zcePrice={zcePrice}
+          memo={transaction.memo}
         />
       ),
       index,

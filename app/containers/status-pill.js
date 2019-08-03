@@ -49,7 +49,7 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
     dispatch(
       updateNodeSyncStatus({
         nodeSyncProgress: newProgress,
-        nodeSyncType: new BigNumber(newProgress).gt(99.99)
+        nodeSyncType: new BigNumber(newProgress).gt(90.99)
           ? NODE_SYNC_TYPES.READY
           : NODE_SYNC_TYPES.SYNCING,
       }),

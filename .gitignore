@@ -8,3 +8,5 @@ build
 coverage
 flow-typed
 .env
+ziced
+zice-cli

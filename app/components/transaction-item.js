@@ -6,10 +6,19 @@ import dateFns from 'date-fns';
 
 import { DARK } from '../constants/themes';
 
-import SentIconDark from '../assets/images/transaction_sent_icon_dark.svg';
 import ReceivedIconDark from '../assets/images/transaction_received_icon_dark.svg';
-import SentIconLight from '../assets/images/transaction_sent_icon_light.svg';
 import ReceivedIconLight from '../assets/images/transaction_received_icon_light.svg';
+import SentIconLight from '../assets/images/transaction_sent_icon_light.svg';
+import SentIconDark from '../assets/images/transaction_sent_icon_dark.svg';
+import PendingIconDark from '../assets/images/transaction_pending_icon_dark.svg';
+import MemoReadRcvIconLight from '../assets/images/transaction_memo_read_rcv_light.svg';
+import MemoReadRcvIconDark from '../assets/images/transaction_memo_read_rcv_dark.svg';
+import MemoReadSndIconLight from '../assets/images/transaction_memo_read_snd_light.svg';
+import MemoReadSndIconDark from '../assets/images/transaction_memo_read_snd_dark.svg';
+import MemoUnreadRcvIconLight from '../assets/images/transaction_memo_unread_rcv_light.svg';
+import MemoUnreadRcvIconDark from '../assets/images/transaction_memo_unread_rcv_dark.svg';
+import MemoUnreadSndIconLight from '../assets/images/transaction_memo_unread_snd_light.svg';
+import MemoUnreadSndIconDark from '../assets/images/transaction_memo_unread_snd_dark.svg';
 import UnconfirmedLight from '../assets/images/unconfirmed_light.svg';
 import UnconfirmedDark from '../assets/images/unconfirmed_dark.svg';
 
@@ -22,19 +31,32 @@ import { TransactionDetailsComponent } from './transaction-details';
 import { formatNumber } from '../utils/format-number';
 import { getCoinName } from '../utils/get-coin-name';
 
+import electronStore from '../../config/electron-store';
+import { MAINNET, TESTNET } from '../../app/constants/zice-network';
+import { isTestnet } from '../../config/is-testnet';
+
+const getStoreKey = () => `SHIELDED_TRANSACTIONS_${isTestnet() ? TESTNET : MAINNET}`;
+const STORE_KEY = getStoreKey();
+
 const Wrapper = styled(RowComponent)`
   background-color: ${props => props.theme.colors.transactionItemBg};
   padding: 15px 17px;
   cursor: pointer;
   border: 1px solid ${props => props.theme.colors.transactionItemBorder};
   border-bottom: none;
-
+  width: 100%;
   &:last-child {
     border-bottom: 1px solid ${props => props.theme.colors.transactionItemBorder};
   }
-
   &:hover {
     background-color: ${props => props.theme.colors.transactionItemHoverBg};
+  }
+`;
+
+const RowWrapper = styled(RowComponent)`
+  background-color: ${props => props.theme.colors.transactionItemBg};
+  min-width: 0px;
+  flex: 1;
   }
 `;
 
@@ -45,14 +67,16 @@ const Icon = styled.img`
 
 /* eslint-disable max-len */
 const TransactionTypeLabel = styled(TextComponent)`
-  color: ${(props: PropsWithTheme<{ isReceived: boolean }>) => (props.isReceived ? props.theme.colors.transactionReceived : props.theme.colors.transactionSent)};
   text-transform: capitalize;
 `;
 /* eslint-enable max-len */
 
 const TransactionAddress = styled(TextComponent)`
   color: ${props => props.theme.colors.transactionItemAddress};
-
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 1rem;
   ${String(Wrapper)}:hover & {
     color: ${props => props.theme.colors.transactionItemAddressHover};
   }
@@ -60,16 +84,19 @@ const TransactionAddress = styled(TextComponent)`
 
 const TransactionLabel = styled(TextComponent)`
   color: ${props => props.theme.colors.transactionLabelText};
-
+  white-space: nowrap;
   ${String(Wrapper)}:hover & {
     color: ${props => props.theme.colors.transactionLabelTextHovered};
   }
 `;
 
+const TransactionAmounts = styled(TextComponent)`
+  white-space:nowrap
+`;
+
 const TransactionColumn = styled(ColumnComponent)`
-  margin-left: 10px;
-  margin-right: 80px;
-  min-width: 60px;
+  margin-left: 5px;
+  min-width: 0px;
 `;
 
 const UnconfirmedStatusWrapper = styled.div`
@@ -81,7 +108,6 @@ const UnconfirmedStatus = styled.img`
   width: 20px;
   height: 20px;
   opacity: 0.6;
-
   ${String(Wrapper)}:hover & {
     opacity: 1;
   }
@@ -96,11 +122,14 @@ export type Transaction = {
   confirmations: number,
   type: 'send' | 'receive',
   date: string,
-  address: string,
+  fromaddress: string,
+  toaddress: String,
   amount: number,
-  zecPrice: number,
+  zicePrice: number,
   transactionId: string,
   theme: AppTheme,
+  isRead: Boolean,
+  memo: string,
 };
 
 const Component = ({
@@ -108,32 +137,79 @@ const Component = ({
   confirmations,
   type,
   date,
-  address,
+  fromaddress,
+  toaddress,
   amount,
-  zecPrice,
+  zicePrice,
   transactionId,
   theme,
+  isRead,
+  memo,
 }: Transaction) => {
   const coinName = getCoinName();
 
   const isReceived = type === 'receive';
+  const isImmature = type === 'immature';
+  const isGenerate = type === 'generate';
+  const isSent = type === 'sent';
+  const isIncoming = isReceived || isImmature || isGenerate;
+
   const transactionTime = dateFns.format(new Date(date), 'HH:mm A');
-  const transactionValueInZec = formatNumber({
+  const transactionValueInZice = formatNumber({
     value: amount,
-    append: `${isReceived ? '+' : '-'}${coinName} `,
+    append: `${isIncoming ? '+' : '-'}${coinName} `,
   });
   const transactionValueInUsd = formatNumber({
-    value: amount * zecPrice,
-    append: `${isReceived ? '+' : '-'}USD $`,
+    value: amount * zicePrice,
+    append: `${isIncoming ? '+' : '-'}USD $`,
   });
 
   const receivedIcon = theme.mode === DARK ? ReceivedIconDark : ReceivedIconLight;
   const sentIcon = theme.mode === DARK ? SentIconDark : SentIconLight;
+  const pendingIcon = theme.mode === DARK ? PendingIconDark : PendingIconDark;
   const unconfirmedIcon = theme.mode === DARK ? UnconfirmedLight : UnconfirmedDark;
 
   // TODO: style the tooltip correctly (overlay issue)
   // const showUnconfirmed = !confirmed || confirmations < 1 || address === '(Shielded)';
   const showUnconfirmed = false;
+
+  const getIconSrc = (state) => {
+    if (memo) return (state==='send')
+      ? isRead //send
+        ? (theme.mode === DARK)
+          ? MemoReadSndIconDark
+          : MemoReadSndIconLight
+        : (theme.mode === DARK)
+          ? MemoUnreadSndIconDark
+          : MemoUnreadSndIconLight
+      : isRead //receive
+        ? (theme.mode === DARK)
+          ? MemoReadRcvIconDark
+          : MemoReadRcvIconLight
+        : (theme.mode === DARK)
+          ? MemoUnreadRcvIconDark
+          : MemoUnreadRcvIconLight
+
+    return (
+      {
+        receive:  receivedIcon,
+        generate: ReceivedIconDark,
+        send:     sentIcon,
+        immature: PendingIconDark,
+      }[state]
+    );
+  }
+
+  const getTextColor = (state) => {
+    return (
+      {
+        receive:  theme.colors.transactionReceived,
+        generate: theme.colors.transactionReceived,
+        send:     theme.colors.transactionSent,
+        immature: theme.colors.transactionPending
+      }[state]
+    );
+  }
 
   return (
     <ModalComponent
@@ -144,11 +220,11 @@ const Component = ({
           justifyContent='space-between'
           onClick={toggleVisibility}
         >
-          <RowComponent alignItems='center'>
+          <RowWrapper alignItems='center'>
             <RelativeRowComponent alignItems='center'>
-              <Icon src={isReceived ? receivedIcon : sentIcon} alt='Transaction Type Icon' />
+              <Icon src={getIconSrc(type)} alt='Transaction Type Icon' />
               <TransactionColumn>
-                <TransactionTypeLabel isReceived={isReceived} value={type} isBold />
+                <TransactionTypeLabel isReceived={isReceived} value={type} isBold color={getTextColor(type)}/>
                 <TransactionLabel value={transactionTime} isReceived={isReceived} />
               </TransactionColumn>
               {showUnconfirmed && (
@@ -157,16 +233,16 @@ const Component = ({
                 </UnconfirmedStatusWrapper>
               )}
             </RelativeRowComponent>
-            <TransactionAddress value={address} />
-          </RowComponent>
-          <ColumnComponent alignItems='flex-end'>
-            <TextComponent
+            <TransactionAddress value={toaddress} />
+          </RowWrapper>
+          <TransactionColumn alignItems='flex-end'>
+            <TransactionAmounts
               isBold
-              value={transactionValueInZec}
-              color={isReceived ? theme.colors.transactionReceived : theme.colors.transactionSent}
+              value={transactionValueInZice}
+              color={getTextColor(type)}
             />
             <TransactionLabel value={transactionValueInUsd} />
-          </ColumnComponent>
+          </TransactionColumn>
         </Wrapper>
       )}
     >
@@ -174,13 +250,15 @@ const Component = ({
         <TransactionDetailsComponent
           amount={amount}
           date={date}
-          address={address}
+          fromaddress={fromaddress}
+          toaddress={toaddress}
           confirmed={confirmed}
           confirmations={confirmations}
           transactionId={transactionId}
           handleClose={toggleVisibility}
           type={type}
-          zecPrice={zecPrice}
+          zicePrice={zicePrice}
+          memo={memo}
         />
       )}
     </ModalComponent>

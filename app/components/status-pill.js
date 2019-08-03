@@ -14,6 +14,7 @@ import syncIconDark from '../assets/images/sync_icon_dark.png';
 import syncIconLight from '../assets/images/sync_icon_light.png';
 import errorIconDark from '../assets/images/error_icon_dark.png';
 import errorIconLight from '../assets/images/error_icon_light.png';
+import { updateShieldedTransactions } from '../../services/shielded-transactions';
 
 import type { MapDispatchToProps, MapStateToProps } from '../containers/status-pill';
 
@@ -134,6 +135,7 @@ class Component extends PureComponent<Props, State> {
 
   componentDidMount() {
     this.timer = setInterval(() => this.updateStatus(), INTERVAL_BEFORE_READY);
+    this.zTxUpdate = setInterval(() => this.updateZTx(), INTERVAL_BEFORE_READY);
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -152,8 +154,13 @@ class Component extends PureComponent<Props, State> {
     this.cleanUpdateInterval();
   }
 
+  updateZTx = () => {
+    console.log('updateztx')
+    updateShieldedTransactions()
+  }
+
   updateStatus = () => {
-    if (this.requestOnTheFly) return;
+      if (this.requestOnTheFly) return;
 
     this.requestOnTheFly = true;
 

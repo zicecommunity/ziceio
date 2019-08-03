@@ -8,8 +8,8 @@ import humanizeDuration from 'humanize-duration';
 
 import { TextComponent } from '../components/text';
 
-import ConsoleSymbolDark from '../assets/images/console_zcash_dark.png';
-import ConsoleSymbolLight from '../assets/images/console_zcash_light.png';
+import ConsoleSymbolDark from '../assets/images/console_zice_dark.png';
+import ConsoleSymbolLight from '../assets/images/console_zice_light.png';
 import { DARK } from '../constants/themes';
 import rpc from '../../services/api';
 import store from '../../config/electron-store';
@@ -58,6 +58,7 @@ class Component extends PureComponent<Props, State> {
 
   componentDidMount() {
     this.interval = setInterval(() => this.update(), 3000);
+    console.log('ConsoleView')
   }
 
   componentWillUnmount() {
@@ -86,9 +87,9 @@ class Component extends PureComponent<Props, State> {
   };
 
   getLog = (state: State) => `
-    Thank you for running a Zcash node!
+    Thank you for running a ZiCE node!
     You're helping to strengthen the network and contributing to a social good :)
-    In order to ensure you are adequately protecting your privacy when using Zcash, please see <https://z.cash/support/security/>.
+    In order to ensure you are adequately protecting your privacy when using ZiCE, please see <https://z.cash/support/security/>.
 
     Block height | ${state.blockHeight}
     Connections | ${state.connections}
@@ -109,7 +110,7 @@ class Component extends PureComponent<Props, State> {
     return (
       <Wrapper id='console-wrapper'>
         <Fragment>
-          <ConsoleImg src={ConsoleSymbol} alt='Zcashd' />
+          <ConsoleImg src={ConsoleSymbol} alt='ZiCEd' />
           {this.getLog(this.state)
             .split('\n')
             .map((item, idx) => (

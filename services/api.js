@@ -13,22 +13,24 @@ const getRPCConfig = () => {
 
   return {
     host: rpcconnect || '127.0.0.1',
-    port: rpcport || (isTestnet() ? 18232 : 8232),
+    port: rpcport || (isTestnet() ? 19732 : 9732),
     user: (store.get('rpcuser'): string),
     password: (store.get('rpcpassword'): string),
   };
 };
 
 const getMessage = (statusCode: number, isECONNREFUSED: boolean) => {
-  if (isECONNREFUSED) {
-    return 'Zepio could not find a daemon running, please check the logs!';
-  }
+  if (statusCode !== -28) {
+    if (isECONNREFUSED) {
+      return 'ZiCEio is unable to detect a running daemon, please check you can connect using zice-cli';
+    }
 
-  switch (statusCode) {
-    case 401:
-      return 'Not authorized to access Zcash RPC, please check your rpcuser and rpcpassword';
-    default:
-      return 'Something went wrong';
+    switch (statusCode) {
+      case 401:
+        return 'Not authorized to access ZiCE RPC, please check your rpcuser and rpcpassword';
+      default:
+        return 'Something went wrong';
+    }
   }
 };
 
@@ -37,10 +39,10 @@ const api: APIMethods = METHODS.reduce(
     ...obj,
     [method]: (...args) => {
       const RPC = getRPCConfig();
-      console.info('[RPC CALL]', {
-        method,
-        payload: args,
-      });
+      // console.info('[RPC CALL]', {
+      //   method,
+      //   payload: args,
+      // });
       return got
         .post(`http://${RPC.host}:${RPC.port}`, {
           method: 'POST',
@@ -54,7 +56,7 @@ const api: APIMethods = METHODS.reduce(
           },
         })
         .then((data) => {
-          console.log('[RPC CALL SUCCESS] -', method, data.body.result);
+          // console.log('[RPC CALL SUCCESS] -', method, data.body.result);
           return Promise.resolve(data.body && data.body.result);
         })
         .catch((payload) => {

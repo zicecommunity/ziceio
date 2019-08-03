@@ -4,14 +4,14 @@ import path from 'path';
 import { promisify } from 'util';
 import eres from 'eres';
 
-import { getZcashFolder } from './get-zcash-folder';
+import { getZiCEFolder } from './get-zice-folder';
 
-const ZCASH_LOCK_FILE = '.lock';
+const ZICE_LOCK_FILE = '.lock';
 
-export const checkLockFile = async (zcashPath?: string) => {
+export const checkLockFile = async (zicePath?: string) => {
   try {
-    const myPath = zcashPath || getZcashFolder();
-    const [cannotAccess] = await eres(promisify(fs.access)(path.join(myPath, ZCASH_LOCK_FILE)));
+    const myPath = zicePath || getZiCEFolder();
+    const [cannotAccess] = await eres(promisify(fs.access)(path.join(myPath, ZICE_LOCK_FILE)));
     return !cannotAccess;
   } catch (err) {
     return false;

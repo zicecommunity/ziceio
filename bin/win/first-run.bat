@@ -1,20 +1,17 @@
 @echo off
 
-IF NOT EXIST %AppData%\Zcash (
-    mkdir %AppData%\Zcash
+IF NOT EXIST %AppData%\ZiCE (
+    mkdir %AppData%\ZiCE
 )
 
 IF NOT EXIST %AppData%\ZcashParams (
     mkdir %AppData%\ZcashParams
 )
 
-IF NOT EXIST %AppData%\Zcash\zcash.conf (
+IF NOT EXIST %AppData%\ZiCE\zice.conf (
    (
-    echo addnode=mainnet.z.cash 
-    echo rpcuser=username 
-    echo rpcpassword=password%random%%random%
-    echo daemon=1 
-    echo showmetrics=0 
-    echo gen=0 
-) > %AppData%\Zcash\zcash.conf
+    echo rpcallowip=127.0.0.1
+    echo txindex=1
+    echo server=1
+) > %AppData%\ZiCE\zice.conf
 ) 

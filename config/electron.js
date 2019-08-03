@@ -12,9 +12,9 @@ import {
 import { autoUpdater } from 'electron-updater';
 import isDev from 'electron-is-dev';
 import { registerDebugShortcut } from '../utils/debug-shortcut';
-import runDaemon from './daemon/zcashd-child-process';
-import { log as zcashLog, cleanLogs } from './daemon/logger';
-import getZecPrice from '../services/zec-price';
+import runDaemon from './daemon/ziced-child-process';
+import { log as ziceLog, cleanLogs } from './daemon/logger';
+import getZcePrice from '../services/zce-price';
 import store from './electron-store';
 import { handleDeeplink } from './handle-deeplink';
 import { MENU } from '../app/menu';
@@ -23,7 +23,7 @@ dotenv.config();
 
 let mainWindow: BrowserWindowType;
 let updateAvailable: boolean = false;
-let zcashDaemon;
+let ziceDaemon;
 
 const showStatus = (text) => {
   if (text === 'Update downloaded') updateAvailable = true;
@@ -70,7 +70,9 @@ const createWindow = () => {
     },
   });
 
-  getZecPrice().then(({ USD }) => store.set('ZEC_DOLLAR_PRICE', String(USD)));
+  mainWindow.webContents.openDevTools();
+  
+  getZcePrice().then(({ USD }) => store.set('ZCE_DOLLAR_PRICE', String(USD)));
 
   mainWindow.setVisibleOnAllWorkspaces(true);
   registerDebugShortcut(app, mainWindow);
@@ -85,7 +87,7 @@ const createWindow = () => {
   exports.mainWindow = mainWindow;
 };
 
-app.setAsDefaultProtocolClient('zcash');
+app.setAsDefaultProtocolClient('zice');
 
 const instanceLock = app.requestSingleInstanceLock();
 if (instanceLock) {
@@ -121,18 +123,18 @@ app.on('ready', async () => {
   cleanLogs();
 
   if (process.env.NODE_ENV === 'test') {
-    zcashLog('Not running daemon, please run the mock API');
+    ziceLog('Not running daemon, please run the mock API');
     return;
   }
 
   runDaemon()
     .then((proc) => {
       if (proc) {
-        zcashLog(`Zcash Daemon running. PID: ${proc.pid}`);
-        zcashDaemon = proc;
+        ziceLog(`ZiCE Daemon running. PID: ${proc.pid}`);
+        ziceDaemon = proc;
       }
     })
-    .catch(zcashLog);
+    .catch(ziceLog);
 });
 app.on('activate', () => {
   if (mainWindow === null) createWindow();
@@ -141,8 +143,8 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 app.on('before-quit', () => {
-  if (zcashDaemon) {
-    zcashLog('Graceful shutdown Zcash Daemon, this may take a few seconds.');
-    zcashDaemon.kill('SIGINT');
+  if (ziceDaemon) {
+    ziceLog('Graceful shutdown ZiCE Daemon, this may take a few seconds.');
+    ziceDaemon.kill('SIGINT');
   }
 });

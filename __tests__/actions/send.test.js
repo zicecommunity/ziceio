@@ -9,14 +9,14 @@ import {
   RESET_SEND_TRANSACTION,
   VALIDATE_ADDRESS_SUCCESS,
   VALIDATE_ADDRESS_ERROR,
-  LOAD_ZEC_PRICE,
+  LOAD_ZCE_PRICE,
   sendTransaction,
   sendTransactionSuccess,
   sendTransactionError,
   resetSendTransaction,
   validateAddressSuccess,
   validateAddressError,
-  loadZECPrice,
+  loadZCEPrice,
 } from '../../app/redux/modules/send';
 
 const store = configureStore()();
@@ -74,7 +74,7 @@ describe('Send Actions', () => {
     );
   });
 
-  test('should validate a address with success', () => {
+  test('should validate an address with success', () => {
     const payload = {
       isValid: true,
     };
@@ -89,7 +89,7 @@ describe('Send Actions', () => {
     );
   });
 
-  test('should validate a address with error', () => {
+  test('should validate an address with error', () => {
     store.dispatch(validateAddressError());
 
     expect(store.getActions()[0]).toEqual(
@@ -99,16 +99,16 @@ describe('Send Actions', () => {
     );
   });
 
-  test('should load ZEC price', () => {
+  test('should load ZCE price', () => {
     const payload = {
       value: 1.35,
     };
 
-    store.dispatch(loadZECPrice(payload));
+    store.dispatch(loadZCEPrice(payload));
 
     expect(store.getActions()[0]).toEqual(
       expect.objectContaining({
-        type: LOAD_ZEC_PRICE,
+        type: LOAD_ZCE_PRICE,
         payload,
       }),
     );

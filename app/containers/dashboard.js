@@ -11,9 +11,9 @@ import { DashboardView } from '../views/dashboard';
 
 import rpc from '../../services/api';
 import store from '../../config/electron-store';
-import { SAPLING, MIN_CONFIRMATIONS_NUMBER } from '../constants/zcash-network';
+import { SAPLING, MIN_CONFIRMATIONS_NUMBER } from '../constants/zice-network';
 import { NODE_SYNC_TYPES } from '../constants/node-sync-types';
-import { listShieldedTransactions } from '../../services/shielded-transactions';
+import { zGetZTxsFromStore } from '../../services/shielded-transactions';
 import { sortByDescend } from '../utils/sort-by-descend';
 
 import {
@@ -33,7 +33,7 @@ export type MapStateToProps = {|
   unconfirmed: number,
   error: null | string,
   fetchState: FetchState,
-  zecPrice: number,
+  zcePrice: number,
   addresses: string[],
   transactions: TransactionsList,
   isDaemonReady: boolean,
@@ -46,7 +46,7 @@ const mapStateToProps: AppState => MapStateToProps = ({ walletSummary, app }) =>
   unconfirmed: walletSummary.unconfirmed,
   error: walletSummary.error,
   fetchState: walletSummary.fetchState,
-  zecPrice: walletSummary.zecPrice,
+  zcePrice: walletSummary.zcePrice,
   addresses: walletSummary.addresses,
   transactions: walletSummary.transactions,
   isDaemonReady: app.nodeSyncType === NODE_SYNC_TYPES.READY,
@@ -63,7 +63,7 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
     const [walletErr, walletSummary] = await eres(rpc.z_gettotalbalance());
     const [zAddressesErr, zAddresses = []] = await eres(rpc.z_listaddresses());
     const [tAddressesErr, tAddresses = []] = await eres(rpc.getaddressesbyaccount(''));
-    const [transactionsErr, transactions] = await eres(rpc.listtransactions());
+    const [transactionsErr, transactions] = await eres(rpc.listtransactions('', 1000, 0));
     const [unconfirmedBalanceErr, unconfirmedBalance] = await eres(rpc.getunconfirmedbalance());
 
     if (walletErr || zAddressesErr || tAddressesErr || transactionsErr || unconfirmedBalanceErr) {
@@ -74,17 +74,44 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
       );
     }
 
+    const tTxs = transactions.filter(t => t.address && (t.category === 'receive' || t.category === 'send')).map(e => {return {
+      confirmations: e.confirmations,
+      txid: e.txid,
+      category: e.category,
+      time: e.time,
+      toaddress: e.address,
+      amount: e.amount,
+    }})
+
+    const formatMemo = (m) => {
+      m = m.replace(/[0]+$/,'')
+      if (m === "f6") return ''
+      m = m.replace(/(.{2})/g,'$1,').split(',').filter(Boolean).map(function (x) {return parseInt(x, 16)})
+      return String.fromCharCode.apply(String, m)
+    }
+
     const formattedTransactions: Array<Object> = flow([
       arr => arr.map(transaction => ({
-        confirmed: transaction.confirmations >= MIN_CONFIRMATIONS_NUMBER,
-        confirmations: transaction.confirmations,
+        confirmations: typeof transaction.confirmations !== 'undefined'
+          ? transaction.confirmations
+          : 0,
+        confirmed: typeof transaction.confirmations !== 'undefined'
+          ? transaction.confirmations >= MIN_CONFIRMATIONS_NUMBER
+          : true,
         transactionId: transaction.txid,
         type: transaction.category,
         date: new Date(transaction.time * 1000).toISOString(),
-        address: transaction.address || '(Shielded)',
-        amount: Math.abs(transaction.amount),
-        fees: transaction.fee ? new BigNumber(transaction.fee).abs().toFormat(4) : 'N/A',
-      })),
+        fromaddress: transaction.fromaddress || '(Shielded)',
+        toaddress: transaction.toaddress || '(Shielded)',
+        amount: new BigNumber(transaction.amount).absoluteValue().toNumber(),
+        fees: transaction.fee
+          ? new BigNumber(transaction.fee).abs().toFormat(4)
+          : 'N/A',
+          isRead: transaction.isRead,
+          memo: transaction.memo
+          ? formatMemo(transaction.memo)
+          : ''
+     })),
       arr => groupBy(arr, obj => dateFns.format(obj.date, 'MMM DD, YYYY')),
       obj => Object.keys(obj).map(day => ({
         day,
@@ -92,7 +119,9 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
         list: sortByDescend('date')(obj[day]),
       })),
       sortByDescend('jsDay'),
-    ])([...transactions, ...listShieldedTransactions()]);
+    ])(([...tTxs, ...await zGetZTxsFromStore(10)]
+    .sort((a, b) => (a.time < b.time) ? 1 : -1))
+      .slice(0, 10));
 
     if (!zAddresses.length) {
       const [, newZAddress] = await eres(rpc.z_getnewaddress(SAPLING));
@@ -114,7 +143,7 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
         unconfirmed: unconfirmedBalance,
         addresses: [...zAddresses, ...tAddresses],
         transactions: formattedTransactions,
-        zecPrice: new BigNumber(store.get('ZEC_DOLLAR_PRICE')).toNumber(),
+        zcePrice: new BigNumber(store.get('ZCE_DOLLAR_PRICE')).toNumber(),
       }),
     );
   },

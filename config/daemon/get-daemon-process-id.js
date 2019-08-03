@@ -1,14 +1,14 @@
 // @flow
 import fs from 'fs';
 import path from 'path';
-import { getZcashFolder } from './get-zcash-folder';
+import { getZiCEFolder } from './get-zice-folder';
 
-const ZCASH_PID_FILE = 'zcashd.pid';
+const ZICE_PID_FILE = 'ziced.pid';
 
-export const getDaemonProcessId = (zcashPath?: string) => {
+export const getDaemonProcessId = (zicePath?: string) => {
   try {
-    const myPath = zcashPath || getZcashFolder();
-    const buffer = fs.readFileSync(path.join(myPath, ZCASH_PID_FILE));
+    const myPath = zicePath || getZiCEFolder();
+    const buffer = fs.readFileSync(path.join(myPath, ZICE_PID_FILE));
     const pid = Number(buffer.toString().trim());
     return pid;
   } catch (err) {

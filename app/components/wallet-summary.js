@@ -16,6 +16,7 @@ import ShieldLightImage from '../assets/images/shield_light.png';
 
 const OutsideWrapper = styled.div`
   margin-top: ${props => props.theme.layoutContentPaddingTop};
+  width: 100%;
 `;
 
 const Wrapper = styled.div`
@@ -26,6 +27,7 @@ const Wrapper = styled.div`
   border-radius: ${props => props.theme.boxBorderRadius};
   padding: 30px 30px;
   position: relative;
+  flex-wrap: wrap;
 
   ${media.main`
     margin-top: 0;
@@ -47,7 +49,7 @@ const TotalContainer = styled.div`
 
 const DetailContainer = styled.div`
   min-width: 130px;
-  padding-right: 20px;
+  padding-left: 20px;
 `;
 
 const USDValue = styled(TextComponent)`
@@ -107,7 +109,7 @@ type Props = {
   shielded: number,
   transparent: number,
   unconfirmed: number,
-  zecPrice: number,
+  zcePrice: number,
   theme: AppTheme,
 };
 
@@ -116,7 +118,7 @@ export const Component = ({
   shielded,
   transparent,
   unconfirmed,
-  zecPrice,
+  zcePrice,
   theme,
 }: Props) => {
   const coinName = getCoinName();
@@ -128,11 +130,11 @@ export const Component = ({
         <TotalContainer>
           <TextComponent
             size={theme.fontSize.medium * 2.4}
-            value={`${coinName} ${formatNumber({ value: total })}`}
+            value={`${coinName} ${parseFloat(formatNumber({value: total})).toFixed(3)}`}
             isBold
           />
           <USDValue
-            value={`USD $${formatNumber({ value: total * zecPrice })}`}
+            value={`USD $${formatNumber({ value: total * zcePrice })}`}
             size={theme.fontSize.medium * 2}
           />
         </TotalContainer>
@@ -140,29 +142,29 @@ export const Component = ({
           <DetailContainer>
             <ShieldedValue value='SHIELDED' isBold size={theme.fontSize.small} />
             <MiddleLabel
-              value={`${coinName} ${formatNumber({ value: shielded })}`}
-              isBold
+            value={`${coinName} ${parseFloat(formatNumber({value: shielded})).toFixed(3)}`}
+            isBold
               size='16px'
             />
-            <USDValue value={`USD $${formatNumber({ value: shielded * zecPrice })}`} />
+            <USDValue value={`USD $${formatNumber({ value: shielded * zcePrice })}`} />
           </DetailContainer>
           <DetailContainer>
             <DefaultLabel value='TRANSPARENT' isBold size={theme.fontSize.small} />
             <MiddleLabel
-              value={`${coinName} ${formatNumber({ value: transparent })}`}
-              isBold
+            value={`${coinName} ${parseFloat(formatNumber({value: transparent})).toFixed(3)}`}
+            isBold
               size='16px'
             />
-            <USDValue value={`USD $${formatNumber({ value: transparent * zecPrice })}`} />
+            <USDValue value={`USD $${formatNumber({ value: transparent * zcePrice })}`} />
           </DetailContainer>
           <DetailContainer>
             <UnconfirmedLabel value='UNCONFIRMED' isBold size={theme.fontSize.small} />
             <UnconfirmedValue
-              value={`${coinName} ${formatNumber({ value: transparent })}`}
-              isBold
+            value={`${coinName} ${parseFloat(formatNumber({value: unconfirmed})).toFixed(3)}`}
+            isBold
               size='16px'
             />
-            <USDValue value={`USD $${formatNumber({ value: unconfirmed * zecPrice })}`} />
+            <USDValue value={`USD $${formatNumber({ value: unconfirmed * zcePrice })}`} />
           </DetailContainer>
         </DetailMainContainer>
       </Wrapper>

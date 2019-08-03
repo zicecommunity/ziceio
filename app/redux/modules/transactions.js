@@ -21,17 +21,17 @@ export const loadTransactions = () => ({
 
 export const loadTransactionsSuccess = ({
   list,
-  zecPrice,
+  zcePrice,
   hasNextPage,
 }: {
-  list: Transaction[],
-  zecPrice: number,
+  list: TransactionsList,
+  zcePrice: number,
   hasNextPage: boolean,
 }) => ({
   type: LOAD_TRANSACTIONS_SUCCESS,
   payload: {
     list,
-    zecPrice,
+    zcePrice,
     hasNextPage,
   },
 });
@@ -49,13 +49,13 @@ export const resetTransactionsList = () => ({
 export type State = {
   error: string | null,
   list: Transaction[],
-  zecPrice: number,
+  zcePrice: number,
   hasNextPage: boolean,
   fetchState: FetchState,
 };
 
 const initialState = {
-  zecPrice: 0,
+  zcePrice: 0,
   list: [],
   error: null,
   hasNextPage: true,

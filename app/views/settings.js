@@ -21,7 +21,7 @@ import { SelectComponent } from '../components/select';
 
 import rpc from '../../services/api';
 import { DARK, LIGHT, THEME_MODE } from '../constants/themes';
-import { MAINNET, TESTNET } from '../constants/zcash-network';
+import { MAINNET, TESTNET } from '../constants/zice-network';
 import electronStore from '../../config/electron-store';
 import { openExternal } from '../utils/open-external';
 import { isTestnet } from '../../config/is-testnet';
@@ -36,16 +36,25 @@ const IMPORT_PRIV_KEYS_CONTENT = 'Importing private keys will add the spendable 
 const IMPORT_PRIV_KEYS_CONTENT_MODAL = 'Paste your private keys here, one per line. These spending keys will be imported into your wallet.';
 const IMPORT_PRIV_KEYS_SUCCESS_CONTENT = 'Private keys imported in your wallet. Any spendable coins should now be available.';
 const EXPORT_PRIV_KEYS_TITLE = 'Export Private Keys';
-const EXPORT_PRIV_KEYS_CONTENT = 'Beware: exporting your private keys will allow anyone controlling them to spend your coins. Only perform this action on a trusted machine.';
+let EXPORT_PRIV_KEYS_CONTENT = 'Beware: exporting your private keys will allow anyone controlling them to spend your coins. Only perform this action on a trusted machine.';
 const BACKUP_WALLET_TITLE = 'Backup Wallet';
 const BACKUP_WALLET_CONTENT = 'It is recommended that you backup your wallet often to avoid possible issues arising from data corruption.';
 const CONFIRM_RELAUNCH_CONTENT = "You'll need to restart the application and the internal full node. Are you sure you want to do this?";
-const RUNNING_NON_EMBEDDED_DAEMON_WARNING = 'You are using a separate zcashd process, in order to change the network, you need to restart the process yourself';
+const RUNNING_NON_EMBEDDED_DAEMON_WARNING = 'You are using a separate ziced process, in order to change the network, you need to restart the process yourself';
 
 const SHIELDED_ADDRESS_PRIVATE_KEY_PREFIX = isTestnet() ? 'secret-extended-key' : 'SK';
 
+const OuterWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: center;
+`;
+
 const Wrapper = styled.div`
   margin-top: ${props => props.theme.layoutContentPaddingTop};
+  width: 100%;
 `;
 
 const ModalContent = styled.div`
@@ -71,10 +80,8 @@ const ClipboardButton = styled(Clipboard)`
 `;
 
 const SettingsWrapper = styled.div`
-  min-width: 200px;
-  width: 70%;
-  max-width: 600px;
-  min-width: 350px;
+  min-width: 0;
+  width: 100%;
   background: ${props => props.theme.colors.settingsCardBg};
   padding: 20px 20px 10px 20px;
   border: 1px solid ${props => props.theme.colors.inputBorder};
@@ -232,14 +239,14 @@ export class SettingsView extends PureComponent<Props, State> {
     const { app } = electron.remote;
 
     if (os.platform() === 'darwin') {
-      return path.join(app.getPath('appData'), 'Zcash');
+      return path.join(app.getPath('appData'), 'ZiCE');
     }
 
     if (os.platform() === 'linux') {
-      return path.join(app.getPath('home'), '.zcash');
+      return path.join(app.getPath('home'), '.zice');
     }
 
-    return path.join(app.getPath('appData'), 'Zcash');
+    return path.join(app.getPath('appData'), 'ZiCE');
   };
 
   exportViewKeys = () => {
@@ -264,25 +271,19 @@ export class SettingsView extends PureComponent<Props, State> {
   };
 
   exportPrivateKeys = async () => {
-    const { addresses } = this.props;
-
     this.setState({ isLoading: true });
 
-    const privateKeys = await Promise.all(
-      addresses.map(async ({ address }) => {
-        const [error, privateKey] = await eres(
-          address.startsWith('z') ? rpc.z_exportkey(address) : rpc.dumpprivkey(address),
-        );
+    const exportFileName = `${dateFns.format(
+      new Date(),
+      'YYYYMMDDHHmmss',
+    )}ZiCEExport`;
 
-        if (error || !privateKey) return null;
+    let exportPath = await rpc.z_exportwallet(exportFileName)
 
-        return { zAddress: address, key: privateKey };
-      }),
-    );
+    EXPORT_PRIV_KEYS_CONTENT = `Keys have been exported in this session to ${exportPath}`;
 
     this.setState({
       // $FlowFixMe
-      privateKeys: privateKeys.filter(Boolean),
       successExportPrivateKeys: true,
       isLoading: false,
     });
@@ -317,7 +318,7 @@ export class SettingsView extends PureComponent<Props, State> {
   };
 
   backupWalletDat = async () => {
-    const backupFileName = `zcash-wallet-backup-${dateFns.format(
+    const backupFileName = `zice-wallet-backup-${dateFns.format(
       new Date(),
       'YYYY-MM-DD-mm-ss',
     )}.dat`;
@@ -330,8 +331,8 @@ export class SettingsView extends PureComponent<Props, State> {
 
         const WALLET_DIR = this.getWalletFolderPath();
 
-        const zcashDir = isTestnet() ? path.join(WALLET_DIR, 'testnet3') : WALLET_DIR;
-        const walletDatPath = `${zcashDir}/wallet.dat`;
+        const ziceDir = isTestnet() ? path.join(WALLET_DIR, 'testnet3') : WALLET_DIR;
+        const walletDatPath = `${ziceDir}/wallet.dat`;
 
         const [cannotAccess] = await eres(promisify(fs.access)(walletDatPath));
 
@@ -362,7 +363,7 @@ export class SettingsView extends PureComponent<Props, State> {
       error,
     } = this.state;
 
-    const { zcashNetwork, updateZcashNetwork, embeddedDaemon } = this.props;
+    const { ziceNetwork, updateZiCENetwork, embeddedDaemon } = this.props;
 
     const themeOptions = [{ label: 'Dark', value: DARK }, { label: 'Light', value: LIGHT }];
 
@@ -372,18 +373,19 @@ export class SettingsView extends PureComponent<Props, State> {
     ];
 
     return (
+      <OuterWrapper>
       <Wrapper>
         {embeddedDaemon && (
           <ConfirmDialogComponent
             title='Confirm'
-            onConfirm={() => updateZcashNetwork(zcashNetwork === MAINNET ? TESTNET : MAINNET)}
+            onConfirm={() => updateZiceNetwork(ziceNetwork === MAINNET ? TESTNET : MAINNET)}
             showButtons={embeddedDaemon}
             renderTrigger={toggleVisibility => (
               <ThemeSelectWrapper>
-                <SettingsTitle value='Zcash Network' />
+                <SettingsTitle value='ZiCE Network' />
                 <SelectComponent
-                  onChange={value => (zcashNetwork !== value ? toggleVisibility() : undefined)}
-                  value={zcashNetwork}
+                  onChange={value => (ziceNetwork !== value ? toggleVisibility() : undefined)}
+                  value={ziceNetwork}
                   options={networkOptions}
                 />
               </ThemeSelectWrapper>
@@ -454,6 +456,7 @@ export class SettingsView extends PureComponent<Props, State> {
 
         <SettingsWrapper>
           <ConfirmDialogComponent
+            confirmButtonText='Export now'
             title={EXPORT_PRIV_KEYS_TITLE}
             renderTrigger={toggleVisibility => (
               <SettingsInnerWrapper>
@@ -471,7 +474,7 @@ export class SettingsView extends PureComponent<Props, State> {
           >
             {() => (
               <ModalContent>
-                {successExportPrivateKeys ? (
+                {false ? (
                   privateKeys.map(({ zAddress, key }, index) => (
                     <div key={zAddress}>
                       <ViewKeyHeader>
@@ -534,6 +537,7 @@ export class SettingsView extends PureComponent<Props, State> {
           <Btn label={BACKUP_WALLET_TITLE} onClick={this.backupWalletDat} />
         </SettingsWrapper>
       </Wrapper>
-    );
-  };
+    </OuterWrapper>
+  );
+};
 }

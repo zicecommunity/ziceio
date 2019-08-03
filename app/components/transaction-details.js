@@ -5,10 +5,11 @@ import styled, { withTheme } from 'styled-components';
 import dateFns from 'date-fns';
 import { BigNumber } from 'bignumber.js';
 
-import { ZCASH_EXPLORER_BASE_URL } from '../constants/explorer';
+import { ZICE_EXPLORER_BASE_URL } from '../constants/explorer';
 import { DARK } from '../constants/themes';
 
 import SentIconDark from '../assets/images/transaction_sent_icon_dark.svg';
+import PendingIconDark from '../assets/images/transaction_pending_icon_dark.svg';
 import ReceivedIconDark from '../assets/images/transaction_received_icon_dark.svg';
 import SentIconLight from '../assets/images/transaction_sent_icon_light.svg';
 import ReceivedIconLight from '../assets/images/transaction_received_icon_light.svg';
@@ -22,8 +23,16 @@ import { formatNumber } from '../utils/format-number';
 import { openExternal } from '../utils/open-external';
 import { getCoinName } from '../utils/get-coin-name';
 
+import electronStore from '../../config/electron-store';
+import { MAINNET, TESTNET } from '../../app/constants/zice-network';
+import { isTestnet } from '../../config/is-testnet';
+
+const getStoreKey = () => `SHIELDED_TRANSACTIONS_${isTestnet() ? TESTNET : MAINNET}`;
+const STORE_KEY = getStoreKey();
+
 const Wrapper = styled.div`
-  width: 460px;
+  width: 100%;
+  max-width: 700px;
   background-color: ${props => props.theme.colors.transactionDetailsBg};
   display: flex;
   flex-direction: column;
@@ -58,7 +67,6 @@ const CloseIconImg = styled.img`
   margin-top: 12px;
   margin-right: 12px;
   cursor: pointer;
-
   &:hover {
     filter: brightness(150%);
   }
@@ -70,11 +78,9 @@ const InfoRow = styled(RowComponent)`
   width: 100%;
   height: 80px;
   padding: 0 30px;
-
   &first-child {
     margin-top: 30px;
   }
-
   &:hover {
     background: ${props => props.theme.colors.transactionDetailsRowHover};
   }
@@ -109,6 +115,21 @@ const Ellipsis = styled(TextComponent)`
   width: 100%;
 `;
 
+const TransactionDetailsAddress = styled(TextComponent)`
+  user-select: text;
+  -ms-word-break: break-all;
+  word-break: break-all;
+  word-break: break-word;
+`;
+
+const TransactionDetailsMemo = styled(TextComponent)`
+  -ms-word-break: break-all;
+  word-break: break-all;
+  word-break: break-word;
+  width: 100%;
+  user-select: text;
+`;
+
 const TransactionId = styled.button`
   width: 100%;
   color: ${props => props.theme.colors.text};
@@ -117,7 +138,6 @@ const TransactionId = styled.button`
   border: none;
   cursor: pointer;
   outline: none;
-
   &:hover {
     text-decoration: underline;
   }
@@ -126,29 +146,38 @@ const TransactionId = styled.button`
 type Props = {
   amount: number,
   type: 'send' | 'receive',
-  zecPrice: number,
+  zicePrice: number,
   date: string,
   transactionId: string,
-  address: string,
+  fromaddress: string,
+  toaddress: string,
   handleClose: () => void,
   theme: AppTheme,
   confirmed: boolean,
   confirmations: number,
+  memo: String,
 };
 
 const Component = ({
   amount,
   type,
-  zecPrice,
+  zicePrice,
   date,
   transactionId,
-  address,
+  fromaddress,
+  toaddress,
   handleClose,
   theme,
   confirmed,
   confirmations,
+  memo,
 }: Props) => {
   const isReceived = type === 'receive';
+  const isImmature = type === 'immature';
+  const isGenerate = type === 'generate';
+  const isSent = type === 'sent';
+  const isIncoming = isReceived || isImmature || isGenerate;
+
   const receivedIcon = theme.mode === DARK ? ReceivedIconDark : ReceivedIconLight;
   const sentIcon = theme.mode === DARK ? SentIconDark : SentIconLight;
   const coinName = getCoinName();
@@ -158,33 +187,67 @@ const Component = ({
   if (confirmations >= 3) confirmationValue = confirmations;
   if (confirmed) confirmationValue = confirmations;
 
+  const getIconSrc = (state) => {
+    return (
+      {
+        receive:  receivedIcon,
+        generate: ReceivedIconDark,
+        send:     sentIcon,
+        immature: PendingIconDark
+      }[state]
+    );
+  }
+
+  const saveClose = () => {
+    const txStore = (electronStore.has(STORE_KEY) ? electronStore.get(STORE_KEY) : [])
+
+    txStore.map(obj => {
+      if (obj.txid === transactionId &&
+          obj.category === type &&
+          obj.amount === amount) {
+        obj.isRead = true;
+      }
+    })
+
+    electronStore.set(STORE_KEY, txStore)
+
+    handleClose()
+  }
+
+  const getTextColor = (state) => {
+    return (
+      {
+        receive:  theme.colors.transactionReceived,
+        generate: theme.colors.transactionReceived,
+        send:     theme.colors.transactionSent,
+        immature: theme.colors.transactionPending
+      }[state]
+    );
+  }
+
   return (
     <Wrapper>
       <CloseIconWrapper>
-        <CloseIconImg src={CloseIcon} onClick={handleClose} />
+        <CloseIconImg src={CloseIcon} onClick={saveClose} />
       </CloseIconWrapper>
       <TitleWrapper>
         <TextComponent value='Transaction Details' align='center' />
       </TitleWrapper>
       <DetailsWrapper>
-        <Icon src={isReceived ? receivedIcon : sentIcon} alt='Transaction Type Icon' />
+        <Icon src={getIconSrc(type)} alt='Transaction Type Icon' />
         <TextComponent
           isBold
           size={2.625}
           value={formatNumber({
-            append: `${isReceived ? '+' : '-'}${coinName} `,
+            append: `${isIncoming ? '+' : '-'}${coinName} `,
             value: amount,
           })}
-          color={
-            isReceived
-              ? theme.colors.transactionReceived({ theme })
-              : theme.colors.transactionSent({ theme })
-          }
+          color={getTextColor(type)}
         />
         <TextComponent
           value={formatNumber({
-            append: `${isReceived ? '+' : '-'}USD `,
-            value: new BigNumber(amount).times(zecPrice).toNumber(),
+            append: `${isIncoming ? '+' : '-'}USD `,
+            value: new BigNumber(amount).times(zicePrice).toNumber(),
           })}
           size={1.5}
           color={theme.colors.transactionDetailsLabel({ theme })}
@@ -195,20 +258,22 @@ const Component = ({
           <Label value='DATE' />
           <TextComponent value={dateFns.format(new Date(date), 'MMMM D, YYYY HH:MMA')} />
         </ColumnComponent>
-        <ColumnComponent>
-          <TextComponent
-            value='Confirmations'
-            isBold
-            color={theme.colors.transactionDetailsLabel({ theme })}
-          />
-          <TextComponent value={String(confirmationValue)} />
-        </ColumnComponent>
+        {confirmations > 0 && (
+          <ColumnComponent>
+            <TextComponent
+              value='Confirmations'
+              isBold
+              color={theme.colors.transactionDetailsLabel({ theme })}
+            />
+            <TextComponent value={String(confirmationValue)} />
+          </ColumnComponent>
+        )}
       </InfoRow>
       <Divider />
       <InfoRow>
         <ColumnComponent width='100%'>
           <Label value='TRANSACTION ID' />
-          <TransactionId onClick={() => openExternal(ZCASH_EXPLORER_BASE_URL + transactionId)}>
+          <TransactionId onClick={() => openExternal(ZICE_EXPLORER_BASE_URL + transactionId)}>
             <Ellipsis value={transactionId} />
           </TransactionId>
         </ColumnComponent>
@@ -216,10 +281,19 @@ const Component = ({
       <Divider />
       <InfoRow>
         <ColumnComponent width='100%'>
-          <Label value='Address' />
-          <Ellipsis value={address} />
+          <Label value='ADDRESS' />
+          <TransactionDetailsAddress value={toaddress} />
         </ColumnComponent>
       </InfoRow>
+      <Divider />
+      {memo.length > 0 && (
+        <InfoRow>
+          <ColumnComponent width='100%'>
+            <Label value='MEMO' />
+            <TransactionDetailsMemo value={memo} />
+          </ColumnComponent>
+        </InfoRow>
+      )}
     </Wrapper>
   );
 };

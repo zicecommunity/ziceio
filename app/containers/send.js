@@ -9,7 +9,7 @@ import rpc from '../../services/api';
 import { SendView } from '../views/send';
 
 import {
-  loadZECPrice,
+  loadZCEPrice,
   sendTransaction,
   sendTransactionSuccess,
   sendTransactionError,
@@ -40,7 +40,7 @@ export type SendTransactionInput = {
 
 export type MapStateToProps = {|
   balance: number,
-  zecPrice: number,
+  zcePrice: number,
   addresses: { address: string, balance: number }[],
   error: string | null,
   fetchState: FetchState,
@@ -52,7 +52,7 @@ export type MapStateToProps = {|
 
 const mapStateToProps = ({ sendStatus, receive, app }: AppState): MapStateToProps => ({
   balance: sendStatus.addressBalance,
-  zecPrice: sendStatus.zecPrice,
+  zcePrice: sendStatus.zcePrice,
   addresses: receive.addresses,
   error: sendStatus.error,
   fetchState: receive.fetchState,
@@ -67,7 +67,7 @@ export type MapDispatchToProps = {|
   loadAddresses: () => Promise<void>,
   resetSendView: () => void,
   validateAddress: ({ address: string }) => Promise<void>,
-  loadZECPrice: () => void,
+  loadZCEPrice: () => void,
   getAddressBalance: ({ address: string }) => Promise<void>,
 |};
 
@@ -118,12 +118,13 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
 
       if (operationStatus && operationStatus.status === 'success') {
         clearInterval(interval);
-        if (from.startsWith('z')) {
+        if (from.startsWith('z') || to.startsWith('z')) {
           saveShieldedTransaction({
             txid: operationStatus.result.txid,
             category: 'send',
             time: Date.now() / 1000,
-            address: '(Shielded)',
+            toaddress: to,
+            fromaddress: from,
             amount: new BigNumber(amount).toNumber(),
             memo,
           });
@@ -166,7 +167,14 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
 
     const [zAddressesErr, zAddresses] = await eres(rpc.z_listaddresses());
 
-    const [tAddressesErr, transparentAddresses] = await eres(rpc.getaddressesbyaccount(''));
+    const gettaddresses = async () => {
+      const [err, tListUnspent] = await eres(rpc.listunspent())
+      const uniqueListUnspent = [...new Set(tListUnspent.filter(t => t.generated === false).map(({address}) => address))]
+
+      return [err, uniqueListUnspent]
+    }
+
+    const [tAddressesErr, transparentAddresses] = await gettaddresses();
 
     if (zAddressesErr || tAddressesErr) return dispatch(loadAddressesError({ error: 'Something went wrong!' }));
 
@@ -206,9 +214,9 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
       }),
     );
   },
-  loadZECPrice: () => dispatch(
-    loadZECPrice({
-      value: Number(store.get('ZEC_DOLLAR_PRICE')),
+  loadZCEPrice: () => dispatch(
+    loadZCEPrice({
+      value: Number(store.get('ZCE_DOLLAR_PRICE')),
     }),
   ),
   getAddressBalance: async ({ address }: { address: string }) => {

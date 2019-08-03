@@ -3,7 +3,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { ZcashLogo } from './zcash-logo';
 import { TextComponent } from './text';
 import { Divider } from './divider';
 import { RowComponent } from './row';
@@ -11,25 +10,14 @@ import { StatusPillContainer } from '../containers/status-pill';
 
 const Wrapper = styled.div`
   height: ${props => props.theme.headerHeight};
-  width: 100vw;
   display: flex;
   flex-direction: row;
+  width: 100%;
   background-color: ${props => props.theme.colors.background};
 `;
 
-const LogoWrapper = styled.div`
-  height: ${props => props.theme.headerHeight};
-  width: ${props => props.theme.sidebarWidth};
-  background-image: linear-gradient(
-    to right,
-    ${props => props.theme.colors.sidebarLogoGradientBegin},
-    ${props => props.theme.colors.sidebarLogoGradientEnd}
-  );
-  margin-bottom: 20px;
-`;
-
 const TitleWrapper = styled.div`
-  width: ${props => `calc(100% - ${props.theme.sidebarWidth})`};
+  width: 100%;
   height: ${props => props.theme.headerHeight};
   display: flex;
   flex-direction: column;
@@ -62,9 +50,6 @@ type Props = {
 
 export const HeaderComponent = ({ title }: Props) => (
   <Wrapper id='header'>
-    <LogoWrapper>
-      <ZcashLogo />
-    </LogoWrapper>
     <TitleWrapper>
       <TitleRow alignItems='center' justifyContent='space-around'>
         <Title value={title} />

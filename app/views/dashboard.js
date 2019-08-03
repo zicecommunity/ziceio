@@ -1,6 +1,6 @@
 // @flow
 
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Fragment } from 'react';
 import styled from 'styled-components';
 import electron from 'electron'; // eslint-disable-line import/no-extraneous-dependencies
 
@@ -17,7 +17,7 @@ import { FETCH_STATE } from '../constants/fetch-states';
 
 import type { MapDispatchToProps, MapStateToProps } from '../containers/dashboard';
 
-import zepioLogo from '../assets/images/zcash-icon.png';
+import zepioLogo from '../assets/images/zice-icon.png';
 
 const ModalContent = styled(ColumnComponent)`
   min-height: 400px;
@@ -36,6 +36,14 @@ const LogoComponent = styled.img`
 
 const TitleComponent = styled(TextComponent)`
   font-size: 18px;
+`;
+
+const DashboardWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: center;
 `;
 
 const ContentWrapper = styled.div`
@@ -89,7 +97,7 @@ export class DashboardView extends PureComponent<Props> {
       shielded,
       transparent,
       unconfirmed,
-      zecPrice,
+      zcePrice,
       addresses,
       transactions,
       fetchState,
@@ -100,53 +108,55 @@ export class DashboardView extends PureComponent<Props> {
     }
 
     return (
-      <>
-        <WalletSummaryComponent
-          total={total}
-          shielded={shielded}
-          transparent={transparent}
-          unconfirmed={unconfirmed}
-          zecPrice={zecPrice}
-          addresses={addresses}
-        />
-        {transactions.length === 0 ? (
-          <EmptyTransactionsComponent />
-        ) : (
-          transactions.map(({ day, list }) => (
-            <TransactionDailyComponent
-              transactionsDate={day}
-              transactions={list}
-              zecPrice={zecPrice}
-              key={day}
-            />
-          ))
-        )}
-        {electron.remote.process.env.NODE_ENV !== 'test' && (
-          <ConfirmDialogComponent
-            title='Welcome to Zepio'
-            onConfirm={(toggle) => {
-              store.set(DISPLAY_WELCOME_MODAL, false);
-              toggle();
-            }}
-            onClose={() => store.set(DISPLAY_WELCOME_MODAL, false)}
-            showSingleConfirmButton
-            singleConfirmButtonText='Ok. Let me in!'
-            isVisible={this.shouldShowWelcomeModal()}
-          >
-            {() => (
-              <ModalContent>
-                <ContentWrapper>
-                  <LogoComponent src={zepioLogo} alt='Zepio' />
-                  <TitleComponent value='Hello from Zepio' isBold />
-                  <WelcomeText value='Zepio is a cross-platform full-node Zcash wallet that allows users to easily send and receive ZEC. With first-class support for Sapling shielded addresses, users are able to create truly private transactions using a modern and intuitive interface.' />
-                  <WelcomeText value='Zepio aims to improve the user experience for those seeking true financial privacy online.' />
-                  <AdditionalText value='Zepio will need to sync the Zcash blockchain data before using all features.' />
-                </ContentWrapper>
-              </ModalContent>
-            )}
-          </ConfirmDialogComponent>
-        )}
-      </>
+      <Fragment>
+        <DashboardWrapper>
+          <WalletSummaryComponent
+            total={total}
+            shielded={shielded}
+            transparent={transparent}
+            unconfirmed={unconfirmed}
+            zcePrice={zcePrice}
+            addresses={addresses}
+          />
+          {transactions.length === 0 ? (
+            <EmptyTransactionsComponent />
+          ) : (
+            transactions.map(({ day, list }) => (
+              <TransactionDailyComponent
+                transactionsDate={day}
+                transactions={list}
+                zcePrice={zcePrice}
+                key={day}
+              />
+            ))
+          )}
+          {electron.remote.process.env.NODE_ENV !== 'test' && (
+            <ConfirmDialogComponent
+              title='Welcome to ZiCEio'
+              onConfirm={(toggle) => {
+                store.set(DISPLAY_WELCOME_MODAL, false);
+                toggle();
+              }}
+              onClose={() => store.set(DISPLAY_WELCOME_MODAL, false)}
+              showSingleConfirmButton
+              singleConfirmButtonText='Ok. Let me in!'
+              isVisible={this.shouldShowWelcomeModal()}
+            >
+              {() => (
+                <ModalContent>
+                  <ContentWrapper>
+                    <LogoComponent src={ziceioLogo} alt='ZiCEio' />
+                    <TitleComponent value='Hello from ZiCEio' isBold />
+                    <WelcomeText value='ZiCEio is a cross-platform full-node ZiCE wallet that allows users to easily send and receive ZiCE. With first-class support for Sapling shielded addresses, users are able to create truly private transactions using a modern and intuitive interface.' />
+                    <WelcomeText value='ZiCEio aims to improve the user experience for those seeking true financial privacy online.' />
+                    <AdditionalText value='ZiCEio will need to sync the ZiCE blockchain data before using all features.' />
+                  </ContentWrapper>
+                </ModalContent>
+              )}
+            </ConfirmDialogComponent>
+          )}
+        </DashboardWrapper>
+      </Fragment>
     );
   }
 }
