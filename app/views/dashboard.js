@@ -17,7 +17,7 @@ import { FETCH_STATE } from '../constants/fetch-states';
 
 import type { MapDispatchToProps, MapStateToProps } from '../containers/dashboard';
 
-import zepioLogo from '../assets/images/zice-icon.png';
+import ziceLogo from '../assets/images/zice-icon.png';
 
 const ModalContent = styled(ColumnComponent)`
   min-height: 400px;
@@ -145,7 +145,7 @@ export class DashboardView extends PureComponent<Props> {
               {() => (
                 <ModalContent>
                   <ContentWrapper>
-                    <LogoComponent src={ziceioLogo} alt='ZiCEio' />
+                    <LogoComponent src={ziceLogo} alt='ZiCEio' />
                     <TitleComponent value='Hello from ZiCEio' isBold />
                     <WelcomeText value='ZiCEio is a cross-platform full-node ZiCE wallet that allows users to easily send and receive ZiCE. With first-class support for Sapling shielded addresses, users are able to create truly private transactions using a modern and intuitive interface.' />
                     <WelcomeText value='ZiCEio aims to improve the user experience for those seeking true financial privacy online.' />
