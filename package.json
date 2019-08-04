@@ -51,7 +51,7 @@
   },
   "build": {
     "appId": "com.zicefoundation",
-    "productName": "Zepio",
+    "productName": "ZiCEio",
     "asar": true,
     "directories": {
       "buildResources": "build",

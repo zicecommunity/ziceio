@@ -21,12 +21,12 @@ What happened.
 
 ### Environment
 
-- What version of Zepio are you using?
+- What version of ZiCEio are you using?
 - Which Operating System are you using (macOS/Linux/Windows)? What version?
-- Are you using an external `zcashd` daemon or the one built inside Zepio?
+- Are you using an external `zcashd` daemon or the one built inside ZiCEio?
 
 ### Logs
 
-- `%APPDATA%/zepio/main-process-logs.txt` on Windows
-- `$XDG_CONFIG_HOME/zepio/main-process-logs.txt` or `~/.config/zepio/main-process-logs.txt` on Linux
-- `~/Library/Application Support/zepio/main-process-logs.txt` on macOS
+- `%APPDATA%/ziceio/main-process-logs.txt` on Windows
+- `$XDG_CONFIG_HOME/ziceio/main-process-logs.txt` or `~/.config/ziceio/main-process-logs.txt` on Linux
+- `~/Library/Application Support/ziceio/main-process-logs.txt` on macOS

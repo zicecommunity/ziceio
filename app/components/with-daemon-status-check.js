@@ -27,7 +27,7 @@ export const withDaemonStatusCheck = <PassedProps: {}>(
     state = {
       isRunning: false,
       progress: 0,
-      message: 'Zepio Starting',
+      message: 'ZiCEio Starting',
     };
 
     componentDidMount() {
@@ -87,7 +87,7 @@ export const withDaemonStatusCheck = <PassedProps: {}>(
         .catch((error) => {
           this.requestOnTheFly = false;
 
-          const statusMessage: string = error.message === 'Something went wrong' ? 'Zepio Starting' : error.message;
+          const statusMessage: string = error.message === 'Something went wrong' ? 'ZiCEio Starting' : error.message;
           const isRpcOff = Math.trunc(error.statusCode / 100) === 5;
 
           this.setState({

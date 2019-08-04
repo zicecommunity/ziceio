@@ -122,7 +122,7 @@ const runDaemon: () => Promise<?ChildProcess> = () => new Promise(async (resolve
 
   sendToRenderer('zice-daemon-status', {
     error: false,
-    status: 'Zepio Starting',
+    status: 'ZiCEio Starting',
   });
 
   // In case of --relaunch on argv, we need wait to close the old zice daemon
@@ -162,7 +162,7 @@ const runDaemon: () => Promise<?ChildProcess> = () => new Promise(async (resolve
     store.set(EMBEDDED_DAEMON, false);
     log(
       // eslint-disable-next-line
-        `A daemon was found running in PID: ${daemonProcessId}. Starting Zepio in external daemon mode.`,
+        `A daemon was found running in PID: ${daemonProcessId}. Starting ZiCEio in external daemon mode.`,
     );
 
     // Command line args override zice.conf
@@ -191,7 +191,7 @@ const runDaemon: () => Promise<?ChildProcess> = () => new Promise(async (resolve
   }
 
   log(
-    "Zepio couldn't find a `ziced.pid`, that means there is no instance of zice running on the machine, trying start built-in daemon",
+    "ZiCEio couldn't find a `ziced.pid`, that means there is no instance of zice running on the machine, trying start built-in daemon",
   );
 
   store.set(EMBEDDED_DAEMON, true);

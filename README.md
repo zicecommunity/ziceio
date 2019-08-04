@@ -1,19 +1,19 @@
-# Zepio | ZCE Wallet
+# ZiCEio | ZCE Wallet
 
-Zepio is a Sapling-enabled shielded-address-first ZiCE wallet, featuring cross-platform applications (macOS, Windows and Linux), built-in full node with support for `mainnet` and `testnet`, as well as `dark` and `light` themes.
+ZiCEio is a Sapling-enabled shielded-address-first ZiCE wallet, featuring cross-platform applications (macOS, Windows and Linux), built-in full node with support for `mainnet` and `testnet`, as well as `dark` and `light` themes.
 
 ![Build Status](https://app.bitrise.io/app/a5bc7a8391d5501b/status.svg?token=SOuGNc3Qf9rCj3Osl-eHyQ&branch=master)
 ![Flow Coverage](./public/flow-coverage-badge.svg)
 
-### [Latest Documentation](https://zepiowallet.com)
+### [Latest Documentation](https://ziceiowallet.com)
 
-### [Latest Release](https://github.com/ZiCEFoundation/zepio/releases)
+### [Latest Release](https://github.com/ZiCEFoundation/ziceio/releases)
 
-![Zepio Wallet](https://raw.githubusercontent.com/ZiCEFoundation/zepio-docs/develop/docz/assets/dashboard.png)
+![ZiCEio Wallet](https://raw.githubusercontent.com/ZiCEFoundation/ziceio-docs/develop/docz/assets/dashboard.png)
 
 ## Stack Information
 
-List of the main open source libraries and technologies used in building **Zepio**:
+List of the main open source libraries and technologies used in building **ZiCEio**:
 
 - [ziced](https://github.com/zice/zice): ZiCE node daemon
 - [Electron](https://github.com/electron/electron): Desktop application builder
@@ -29,16 +29,16 @@ List of the main open source libraries and technologies used in building **Zepio
 
 ## Installing and Running From Source
 
-To run **Zepio** from source you'll need to perform the following steps:
+To run **ZiCEio** from source you'll need to perform the following steps:
 ```bash
 # Ensure you have Node LTS v8+
 # https://nodejs.org/en/
 
 # Clone Codebase
-git clone git@github.com:ZiCEFoundation/zepio.git
+git clone git@github.com:ZiCEFoundation/ziceio.git
 
 # Install Dependencies
-# inside of the `zepio` folder
+# inside of the `ziceio` folder
 yarn install
 # or
 npm install
@@ -56,7 +56,7 @@ npm start
 
 To build the application locally follow the instructions below:
 ```bash
-# Make sure you are inside of the main `zepio` folder
+# Make sure you are inside of the main `ziceio` folder
 
 # Run Build Script
 yarn electron:distall
@@ -68,23 +68,23 @@ yarn electron:distall
 
 For a deeper look on the static typing coverage of the application, please follow below:
 ```bash
-# Make sure you are inside of the main `zepio` folder
+# Make sure you are inside of the main `ziceio` folder
 
 # Generate Flow Coverage Report
 # this can take a couple seconds
 yarn flow:report
 
 # Browser should open with the file `index.html` opened
-# Files are also available at `zepio/flow-coverage/source`
+# Files are also available at `ziceio/flow-coverage/source`
 ```
 
 ## Component Library (Docz)
 
-To see Zepio's React component library, please visit https://zepio-components.now.sh. We're always looking for folks to help keep the styleguide updated.
+To see ZiCEio's React component library, please visit https://ziceio-components.now.sh. We're always looking for folks to help keep the styleguide updated.
 
 To run the component library locally, run the following:
 ```bash
-# Make sure you are inside of the main `zepio` folder
+# Make sure you are inside of the main `ziceio` folder
 
 # Run Docz Development Script
 yarn docz:dev
@@ -94,7 +94,7 @@ yarn docz:dev
 
 To build the component library locally, run the following:
 ```bash
-# Make sure you are inside of the main `zepio` folder
+# Make sure you are inside of the main `ziceio` folder
 
 # Run Build Script
 yarn docz:build
@@ -106,7 +106,7 @@ yarn docz:build
 
 To run the application's tests, please run the below:
 ```bash
-# Make sure you are inside of the main `zepio` folder
+# Make sure you are inside of the main `ziceio` folder
 
 # For Unit Tests: Run Jest Unit Test Suite
 yarn test:unit
@@ -119,7 +119,7 @@ yarn test e2e
 
 ## Contributing
 
-In order to contribute and submit PRs to improve the **Zepio** codebase, please check our [CONTRIBUTING](https://github.com/ZiCEFoundation/zepio/blob/master/CONTRIBUTING.md) guide.
+In order to contribute and submit PRs to improve the **ZiCEio** codebase, please check our [CONTRIBUTING](https://github.com/ZiCEFoundation/ziceio/blob/master/CONTRIBUTING.md) guide.
 
 ## License
 
