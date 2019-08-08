@@ -16,5 +16,6 @@ module.exports = {
     historyApiFallback: true,
     host: process.env.HOST || '0.0.0.0',
   },
+  externals: { 'sqlite3':'commonjs sqlite3', },
   ...mainWebpack,
 };

@@ -12,5 +12,6 @@ module.exports = {
     chunkFilename: '[name].chunk.js',
     publicPath: './',
   },
+  externals: { 'sqlite3':'commonjs sqlite3', },
   ...mainWebpack,
 };

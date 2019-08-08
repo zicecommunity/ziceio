@@ -22,6 +22,7 @@
     "start": "yarn check --integrity && concurrently \"cross-env BROWSER=none yarn dev\" \"wait-on http://0.0.0.0:8080 && yarn electron:dev\"",
     "dev": "webpack-dev-server --config config/webpack-dev.config.js --mode development --open --hot",
     "build": "rm -rf build && webpack --config config/webpack-prod.config.js --mode production --env.NODE_ENV=production",
+    "rebuild:sqlite3": "electron-rebuild -f -w sqlite3",
     "release": "node -r @babel/register ./scripts/release.js",
     "lint:precommit": "eslint ./app/",
     "flow:precommit": "glow",
@@ -46,8 +47,7 @@
     "e2e:run": "yarn test e2e"
   },
   "husky": {
-    "hooks": {
-    }
+    "hooks": {}
   },
   "build": {
     "appId": "com.zicefoundation",
@@ -176,6 +176,7 @@
     "electron-icon-maker": "^0.0.4",
     "electron-log": "^2.2.17",
     "electron-positioner": "^4.1.0",
+    "electron-rebuild": "^1.8.5",
     "eslint": "^5.8.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-flowtype": "^3.2.1",
@@ -246,6 +247,8 @@
     "react-virtualized": "^9.21.0",
     "redux": "^4.0.1",
     "redux-thunk": "^2.2.0",
+    "sqlite": "^3.0.3",
+    "sqlite3": "^4.0.9",
     "styled-components": "^4.1.1",
     "styled-theming": "^2.2.0",
     "uuid": "^3.3.2"
