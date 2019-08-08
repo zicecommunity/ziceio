@@ -23,12 +23,13 @@ import {
 import { filterObjectNullKeys } from '../utils/filter-object-null-keys';
 import { asyncMap } from '../utils/async-map';
 import { getLatestAddressKey } from '../utils/get-latest-address-key';
-import { saveShieldedTransaction } from '../../services/shielded-transactions';
 
 import type { AppState } from '../types/app-state';
 import type { Dispatch, FetchState } from '../types/redux';
 
 import { loadAddresses, loadAddressesSuccess, loadAddressesError } from '../redux/modules/receive';
+
+import * as Sql from '../utils/sqlite'
 
 export type SendTransactionInput = {
   from: string,
@@ -119,15 +120,20 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
       if (operationStatus && operationStatus.status === 'success') {
         clearInterval(interval);
         if (from.startsWith('z') || to.startsWith('z')) {
-          saveShieldedTransaction({
-            txid: operationStatus.result.txid,
-            category: 'send',
-            time: Date.now() / 1000,
-            toaddress: to,
-            fromaddress: from,
-            amount: new BigNumber(amount).toNumber(),
-            memo,
-          });
+          await Sql.insertRow(
+            'opid',
+            [
+              Date.now() / 1000,
+              'send',
+              to,
+              new BigNumber(amount).toNumber(),
+              from,
+              operationStatus.result.txid,
+              memo,
+              0,
+              0
+            ]
+          )
         }
         dispatch(sendTransactionSuccess({ operationId: operationStatus.result.txid }));
       }

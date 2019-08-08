@@ -1,12 +1,8 @@
 // @flow
-import electronStore from '../config/electron-store';
-import { MAINNET, TESTNET } from '../app/constants/zice-network';
-import { isTestnet } from '../config/is-testnet';
 import eres from 'eres';
 import rpc from '../services/api';
+import * as Sql from '../app/utils/sqlite'
 
-const getStoreKey = () => `SHIELDED_TRANSACTIONS_${isTestnet() ? TESTNET : MAINNET}`;
-const STORE_KEY = getStoreKey();
 
 type ShieldedTransaction = {|
   txid: string,
@@ -22,11 +18,15 @@ type ShieldedAddressLabel = {|
   address: string,
 |};
 
-let txNoteMerge = [];
 let zReceivedByTransactions = [];
 
-const zListReceivedByAddressAll = (async () => {
+const zListReceivedByAddressAll = (async (blockheight) => {
   const [zAddressesErr, zAddresses = []] = await eres(rpc.z_listaddresses());
+
+  const zSendTransactions = await Sql.sqlCommand('SELECT * FROM opid WHERE category = "send"')
+
+  console.log('zSendTransactions')
+  console.log(zSendTransactions)
 
   if (zAddressesErr) {
     return dispatch(
@@ -52,8 +52,14 @@ const zListReceivedByAddressAll = (async () => {
 
     for (txZAddr of zListReceivedByAddress) {
       const [txErr, txTime] = await eres(rpc.gettransaction(txZAddr.txid))
+      const [txBlockErr, txBlock] = await eres(rpc.getblock(txTime.blockhash))
 
-      if (txErr) {
+      // console.log('txBlock')
+      // console.log(txBlock)
+      // console.log('txTime')
+      // console.log(txTime)
+
+      if (txErr || txBlockErr) {
         return dispatch(
           loadWalletSummaryError({
             error: 'Something went wrong!',
@@ -61,13 +67,14 @@ const zListReceivedByAddressAll = (async () => {
         );
       }
 
-      const zSendTransactions = (electronStore.has(STORE_KEY) ? electronStore.get(STORE_KEY) : []).filter(t => t.category === 'send');
+      // find send address of any local tx
       zSendAddr = zSendTransactions.find(z => z.txid === txZAddr.txid) || ''
 
       //basic filter to add only non-change addresses to list
       if (!zSendTransactions.some(z => (z.fromaddress === zAddr && z.txid === txZAddr.txid && z.amount !== txZAddr.amount)))
       {
         zReceivedByTransactions.push({
+          height: txBlock.height,
           confirmations: txTime.confirmations,
           txid: txZAddr.txid,
           category: "receive",
@@ -80,66 +87,41 @@ const zListReceivedByAddressAll = (async () => {
       }
     }
   }
+
+  // only need 'new' transactions after the last recorded blockheight
+  const zSendTxSince = zReceivedByTransactions.filter(t => t.height > (blockheight))
+
   //group notes to give single total for address
-  return ( await Object.values([...zReceivedByTransactions]
-    .reduce((tx, { confirmations, txid, category, time, toaddress, fromaddress, memo, amount }) => {
-    tx[txid] = { confirmations, txid, category, time, toaddress, fromaddress, memo, amount : (tx[txid] ? tx[txid].amount : 0) + amount  };
+  // return ( await Object.values([...zReceivedByTransactions]
+  return ( await Object.values([...zSendTxSince]
+      .reduce((tx, { height, confirmations, txid, category, time, toaddress, fromaddress, memo, amount }) => {
+    tx[txid] = { height, confirmations, txid, category, time, toaddress, fromaddress, memo, amount : (tx[txid] ? tx[txid].amount : 0) + amount  };
     return tx;
   }, {})));
 })
 
-export const zGetZTxsFromStore = (count) => {
-  return electronStore.has(STORE_KEY) ? electronStore.get(STORE_KEY).slice(0, count) : []
+export const zGetZTxsFromStore = async (count) => {
+  return await Sql.sqlCommand('SELECT * FROM opid')
 }
 
-export const updateShieldedTransactions = async () => {
+export const updateShieldedTransactions = async (blockheight) => {
 
-  console.log('updateShieldedTransactions')
+  const trans = (await zListReceivedByAddressAll(blockheight)).sort((a, b) => (a.time < b.time) ? 1 : -1)
 
-  const zTxs = electronStore.has(STORE_KEY) ? electronStore.get(STORE_KEY) : []
-
-  const zTxRcv = zTxs.filter(t => t.category === 'receive')
-  const zTxSend = zTxs.filter(t => t.category === 'send')
-
-  // remove confirmations from stored values
-  const zTxsRcvNoConf = zTxRcv.map(t=>({
-    amount: t.amount,
-    category: t.category,
-    fromaddress: t.fromaddress,
-    isRead: t.isRead,
-    memo: t.memo,
-    time: t.time,
-    toaddress: t.toaddress,
-    txid: t.txid
-  }))
-
-  // merge to include the isRead prop
-  const txReceivedByMerge = await (await zListReceivedByAddressAll()).map((receivedBy)=>
-      Object.assign({}, receivedBy, zTxsRcvNoConf.find((txRcvStore)=>
-        txRcvStore.txid===receivedBy.txid && 
-        txRcvStore.amount===receivedBy.amount &&
-        txRcvStore.category===receivedBy.category)||{}))
-
-  const trans = [...zTxSend, ...txReceivedByMerge].sort((a, b) => (a.time < b.time) ? 1 : -1)
-
-  //update electron store
-  electronStore.set(STORE_KEY, trans)
+  for (let t in trans) {
+    await Sql.insertRow(
+      'opid',
+      [
+        trans[t].time,
+        trans[t].category,
+        trans[t].toaddress,
+        trans[t].amount,
+        trans[t].fromaddress,
+        trans[t].txid,
+        trans[t].memo,
+        0,
+        trans[t].height
+      ]
+    )
+  }
 };
-
-export const saveShieldedTransaction = async ({ txid, category, time, toaddress, fromaddress, amount, memo }: ShieldedTransaction): void => 
-  {
-    electronStore.set
-    (
-      getStoreKey(),
-      (await zGetZTxsFromStore()).concat(
-      {
-        txid,
-        category,
-        time,
-        toaddress,
-        fromaddress,
-        amount,
-        memo,
-      }),
-    );
-  };

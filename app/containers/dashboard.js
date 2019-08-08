@@ -63,7 +63,7 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
     const [walletErr, walletSummary] = await eres(rpc.z_gettotalbalance());
     const [zAddressesErr, zAddresses = []] = await eres(rpc.z_listaddresses());
     const [tAddressesErr, tAddresses = []] = await eres(rpc.getaddressesbyaccount(''));
-    const [transactionsErr, transactions] = await eres(rpc.listtransactions('', 1000, 0));
+    const [transactionsErr, transactions] = await eres(rpc.listtransactions('', 10, 0));
     const [unconfirmedBalanceErr, unconfirmedBalance] = await eres(rpc.getunconfirmedbalance());
 
     if (walletErr || zAddressesErr || tAddressesErr || transactionsErr || unconfirmedBalanceErr) {
@@ -107,7 +107,7 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
         fees: transaction.fee
           ? new BigNumber(transaction.fee).abs().toFormat(4)
           : 'N/A',
-          isRead: transaction.isRead,
+          isRead: transaction.isread,
           memo: transaction.memo
           ? formatMemo(transaction.memo)
           : ''

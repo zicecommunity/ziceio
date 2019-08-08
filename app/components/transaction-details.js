@@ -23,12 +23,9 @@ import { formatNumber } from '../utils/format-number';
 import { openExternal } from '../utils/open-external';
 import { getCoinName } from '../utils/get-coin-name';
 
-import electronStore from '../../config/electron-store';
 import { MAINNET, TESTNET } from '../../app/constants/zice-network';
 import { isTestnet } from '../../config/is-testnet';
-
-const getStoreKey = () => `SHIELDED_TRANSACTIONS_${isTestnet() ? TESTNET : MAINNET}`;
-const STORE_KEY = getStoreKey();
+import * as Sql from '../../app/utils/sqlite'
 
 const Wrapper = styled.div`
   width: 100%;
@@ -198,19 +195,18 @@ const Component = ({
     );
   }
 
-  const saveClose = () => {
-    const txStore = (electronStore.has(STORE_KEY) ? electronStore.get(STORE_KEY) : [])
+  const saveClose = async () => {
 
-    txStore.map(obj => {
+    const txStore = await Sql.sqlCommand('SELECT * FROM opid')
+
+    txStore.map(async obj => {
       if (obj.txid === transactionId &&
           obj.category === type &&
           obj.amount === amount) {
         obj.isRead = true;
+        await Sql.sqlCommand('UPDATE opid SET isread = 1 WHERE txid = "' + transactionId + '" AND category = "' + type + '" AND amount = "' + amount + '"')
       }
     })
-
-    electronStore.set(STORE_KEY, txStore)
-
     handleClose()
   }
 

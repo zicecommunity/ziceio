@@ -2,6 +2,8 @@
 
 import React, { PureComponent } from 'react';
 import styled, { keyframes, withTheme } from 'styled-components';
+import eres from 'eres';
+import rpc from '../../services/api';
 
 import { TextComponent } from './text';
 
@@ -17,6 +19,20 @@ import errorIconLight from '../assets/images/error_icon_light.png';
 import { updateShieldedTransactions } from '../../services/shielded-transactions';
 
 import type { MapDispatchToProps, MapStateToProps } from '../containers/status-pill';
+
+
+import * as Sql from '../utils/sqlite'
+
+
+const updates = async () => {
+  await Sql.createTable('account')
+  await Sql.createTable('opid')
+  await Sql.createTable('recipient')
+  await Sql.createTableWithValues('system', [6691])
+}
+
+updates()
+
 
 const rotate = keyframes`
   from {
@@ -135,10 +151,9 @@ class Component extends PureComponent<Props, State> {
 
   componentDidMount() {
     this.timer = setInterval(() => this.updateStatus(), INTERVAL_BEFORE_READY);
-    this.zTxUpdate = setInterval(() => this.updateZTx(), INTERVAL_BEFORE_READY);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  async componentDidUpdate(prevProps: Props) {
     const { nodeSyncType } = this.props;
     if (
       prevProps.nodeSyncType === NODE_SYNC_TYPES.SYNCING
@@ -152,11 +167,6 @@ class Component extends PureComponent<Props, State> {
 
   componentWillUnmount() {
     this.cleanUpdateInterval();
-  }
-
-  updateZTx = () => {
-    console.log('updateztx')
-    updateShieldedTransactions()
   }
 
   updateStatus = () => {
