@@ -4,6 +4,10 @@ IF NOT EXIST %AppData%\ZiCE (
     mkdir %AppData%\ZiCE
 )
 
+IF NOT EXIST %AppData%\ZiCEio (
+    mkdir %AppData%\ZiCEio
+)
+
 IF NOT EXIST %AppData%\ZcashParams (
     mkdir %AppData%\ZcashParams
 )

@@ -4,6 +4,7 @@ import React, { PureComponent } from 'react';
 import styled, { keyframes, withTheme } from 'styled-components';
 import eres from 'eres';
 import rpc from '../../services/api';
+import axios from 'axios'
 
 import { TextComponent } from './text';
 
@@ -24,11 +25,16 @@ import type { MapDispatchToProps, MapStateToProps } from '../containers/status-p
 import * as Sql from '../utils/sqlite'
 
 
+
 const updates = async () => {
   await Sql.createTable('account')
   await Sql.createTable('opid')
   await Sql.createTable('recipient')
-  await Sql.createTableWithValues('system', [6691])
+  try {
+    await Sql.createTableWithValues('system', [(await axios.get('http://192.168.0.221:9080/getinfo')).data.blocks])
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 updates()

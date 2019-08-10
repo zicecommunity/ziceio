@@ -2,15 +2,10 @@ import sqlite from 'sqlite';
 import eres from 'eres';
 import rpc from '../../services/api';
 import { updateShieldedTransactions } from '../../services/shielded-transactions';
+import { getZiCEioFolder } from '../utils/get-ziceio-folder';
 
 const updateStatus = async () => {
- 
-  // await updateShieldedTransactions(6602)
-
-  console.log('updateStatus')
   const [txBlockErr, txBlock] = await eres(rpc.getinfo())
-  console.log(txBlock.blocks)
-  console.log(await selectItem('system'))
   let lastzheight = await selectItem('system')
   if (lastzheight < txBlock.blocks) {
     console.log('lastzheight < txBlock.blocks')
@@ -21,6 +16,10 @@ const updateStatus = async () => {
 
 }
 let timer = setInterval(() => updateStatus(), 5000);
+
+const sqlitePath = getZiCEioFolder() + '/wallet.sqlite';
+console.log(sqlitePath)
+
 
 
 // <region> *** table defs ***
@@ -108,7 +107,7 @@ const tableDef = (table) => {
 // <region> *** initialise table ***
 const initTable = async (tableDef) => {
     try {
-        const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+        const db = await sqlite.open(sqlitePath);
         var createSql = 'CREATE TABLE IF NOT EXISTS "' + tableDef.name + '" ('
         tableDef.columns.forEach((column, index) => {
             createSql += column.name + ' ' + column.type + ','
@@ -124,7 +123,7 @@ const initTable = async (tableDef) => {
 // <region> *** initialise table with values ***
 const initTableWithValues = async (tableDef, values) => {
   try {
-    const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+    const db = await sqlite.open(sqlitePath);
 
     let createSql = 'CREATE TABLE IF NOT EXISTS "' + tableDef.name + '" ('
     tableDef.columns.forEach((column, index) => {
@@ -151,7 +150,7 @@ const initTableWithValues = async (tableDef, values) => {
 // <region> *** insert row ***
 const insRow = async (tableName, values) => {
   try {
-    const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+    const db = await sqlite.open(sqlitePath);
       var insertSql = 'INSERT INTO "' + tableName + '" VALUES ('
       values.forEach((value) => {
           insertSql += '"' + value + '",'
@@ -168,7 +167,7 @@ const insRow = async (tableName, values) => {
 // <region> *** table empty ***
 const tableEmpty = async (tableName) => {
   try {
-      const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+      const db = await sqlite.open(sqlitePath);
       var selectSql = 'SELECT count(*) as count FROM "' + tableName + '"'
       let result = await db.all(selectSql)
       await db.close()
@@ -184,7 +183,7 @@ const tableEmpty = async (tableName) => {
 // <region> *** select row ***
 const sqlCmd = async (sql) => {
   try {
-      const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+      const db = await sqlite.open(sqlitePath);
       let result = await db.all(sql)
       await db.close()
       return result
@@ -197,10 +196,9 @@ const sqlCmd = async (sql) => {
 // <region> *** select item ***
 const selItem = async (tableName) => {
   try {
-      const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+      const db = await sqlite.open(sqlitePath);
       var selectSql = 'SELECT * FROM "' + tableName + '"'
       let result = await db.all(selectSql)
-      console.log(result.length)
       await db.close()
       if (result.length > 0) {
         return (result[0]).lastzheight
@@ -216,7 +214,7 @@ const selItem = async (tableName) => {
 // <region> *** update row ***
 const updtRow = async (tableName, value) => {
   try {
-      const db = await sqlite.open('/home/iain/Desktop/wallet.sqlite');
+      const db = await sqlite.open(sqlitePath);
       var selectSql = 'UPDATE "' + tableName + '" SET lastzheight = ' + value
       let result = await db.all(selectSql)
       await db.close()

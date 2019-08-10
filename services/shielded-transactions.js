@@ -25,9 +25,6 @@ const zListReceivedByAddressAll = (async (blockheight) => {
 
   const zSendTransactions = await Sql.sqlCommand('SELECT * FROM opid WHERE category = "send"')
 
-  console.log('zSendTransactions')
-  console.log(zSendTransactions)
-
   if (zAddressesErr) {
     return dispatch(
       loadWalletSummaryError({
@@ -53,11 +50,6 @@ const zListReceivedByAddressAll = (async (blockheight) => {
     for (txZAddr of zListReceivedByAddress) {
       const [txErr, txTime] = await eres(rpc.gettransaction(txZAddr.txid))
       const [txBlockErr, txBlock] = await eres(rpc.getblock(txTime.blockhash))
-
-      // console.log('txBlock')
-      // console.log(txBlock)
-      // console.log('txTime')
-      // console.log(txTime)
 
       if (txErr || txBlockErr) {
         return dispatch(
@@ -101,7 +93,7 @@ const zListReceivedByAddressAll = (async (blockheight) => {
 })
 
 export const zGetZTxsFromStore = async (count) => {
-  return await Sql.sqlCommand('SELECT * FROM opid')
+  return await Sql.sqlCommand('SELECT * FROM opid ORDER BY time DESC LIMIT (' + count + ')')
 }
 
 export const updateShieldedTransactions = async (blockheight) => {

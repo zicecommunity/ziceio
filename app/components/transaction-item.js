@@ -31,12 +31,8 @@ import { TransactionDetailsComponent } from './transaction-details';
 import { formatNumber } from '../utils/format-number';
 import { getCoinName } from '../utils/get-coin-name';
 
-import electronStore from '../../config/electron-store';
 import { MAINNET, TESTNET } from '../../app/constants/zice-network';
 import { isTestnet } from '../../config/is-testnet';
-
-const getStoreKey = () => `SHIELDED_TRANSACTIONS_${isTestnet() ? TESTNET : MAINNET}`;
-const STORE_KEY = getStoreKey();
 
 const Wrapper = styled(RowComponent)`
   background-color: ${props => props.theme.colors.transactionItemBg};

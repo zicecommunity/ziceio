@@ -6,6 +6,7 @@ import flow from 'lodash.flow';
 import groupBy from 'lodash.groupby';
 import dateFns from 'date-fns';
 import { BigNumber } from 'bignumber.js';
+import axios from 'axios'
 
 import { DashboardView } from '../views/dashboard';
 
@@ -90,11 +91,19 @@ const mapDispatchToProps: (dispatch: Dispatch) => MapDispatchToProps = (dispatch
       return String.fromCharCode.apply(String, m)
     }
 
+    let currentHeight
+    try {
+      currentHeight = (await axios.get('http://192.168.0.221:9080/getinfo')).data.blocks
+    } catch (error) {
+      console.error(error);
+    }
+  
+
     const formattedTransactions: Array<Object> = flow([
       arr => arr.map(transaction => ({
-        confirmations: typeof transaction.confirmations !== 'undefined'
+        confirmations: transaction.confirmations > 0
           ? transaction.confirmations
-          : 0,
+          : currentHeight - transaction.blockheight,
         confirmed: typeof transaction.confirmations !== 'undefined'
           ? transaction.confirmations >= MIN_CONFIRMATIONS_NUMBER
           : true,

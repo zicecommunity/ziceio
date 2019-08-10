@@ -3,6 +3,7 @@
 import eres from 'eres';
 import { connect } from 'react-redux';
 import { BigNumber } from 'bignumber.js';
+import axios from 'axios'
 
 import { TransactionsView } from '../views/transactions';
 import {
@@ -76,14 +77,21 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
       return String.fromCharCode.apply(String, m)
     }
 
+    let currentHeight
+    try {
+      currentHeight = (await axios.get('http://192.168.0.221:9080/getinfo')).data.blocks
+    } catch (error) {
+      console.error(error);
+    }
+
     const formattedTransactions = sortByDescend('date')(
       [
         ...tTxs,
-        ...await zGetZTxsFromStore(),
+        ...await zGetZTxsFromStore(1000),
       ].map(transaction => ({
-        confirmations: typeof transaction.confirmations !== 'undefined'
+        confirmations: transaction.confirmations > 0
           ? transaction.confirmations
-          : 0,
+          : currentHeight - transaction.blockheight,
         confirmed: typeof transaction.confirmations !== 'undefined'
           ? transaction.confirmations >= MIN_CONFIRMATIONS_NUMBER
           : true,
@@ -96,7 +104,7 @@ const mapDispatchToProps = (dispatch: Dispatch): MapDispatchToProps => ({
         fees: transaction.fee
           ? new BigNumber(transaction.fee).abs().toFormat(4)
           : 'N/A',
-        isRead: transaction.isRead,
+        isRead: transaction.isread,
         memo: transaction.memo
           ? formatMemo(transaction.memo)
           : ''

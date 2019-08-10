@@ -3,8 +3,8 @@ import os from 'os';
 import path from 'path';
 import electron from 'electron'; // eslint-disable-line
 
-export const getZiCEFolder = () => {
-  const { app } = electron;
+export const getZiCEioFolder = () => {
+  const { app } = electron.remote;
 
   if (os.platform() === 'darwin') {
     return path.join(app.getPath('appData'), 'ZiCEio');

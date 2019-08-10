@@ -5,6 +5,9 @@ set -eu
 # Create default zice.conf
 if [[ "$OSTYPE" == "darwin"* ]]; then
   if [ ! -e "$HOME/Library/Application Support/ZiCE/zice.conf" ] ; then
+    mkdir -p "$HOME/Library/Application Support/ZiCEio"
+  fi
+  if [ ! -e "$HOME/Library/Application Support/ZiCE/zice.conf" ] ; then
     mkdir -p "$HOME/Library/Application Support/ZiCE"
     cat << EOF > "$HOME/Library/Application Support/ZiCE/zice.conf"
 rpcallowip=127.0.0.1
@@ -13,6 +16,9 @@ server=1
 EOF
   fi
 else
+  if [ ! -e "$HOME/Library/Application Support/ZiCE/zice.conf" ] ; then
+    mkdir -p "$HOME/.ziceio"
+  fi
   if [ ! -e "$HOME/.zice/zice.conf" ] ; then
     mkdir -p "$HOME/.zice" 
     cat << EOF > "$HOME/.zice/zice.conf"

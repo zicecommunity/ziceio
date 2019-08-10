@@ -254,7 +254,7 @@ const Component = ({
           <Label value='DATE' />
           <TextComponent value={dateFns.format(new Date(date), 'MMMM D, YYYY HH:MMA')} />
         </ColumnComponent>
-        {confirmations > 0 && (
+        {type === 'receive' && (
           <ColumnComponent>
             <TextComponent
               value='Confirmations'
